@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HerHealth - Smart Health Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>HerHealth Tracker</h1>
+            <p>Your intelligent, personalized health companion.</p>
+        </header>
+
+        <section class="card tip-card">
+            <h2>💡 Your Daily AI Health Tip</h2>
+            <p id="daily-tip">Analyzing your recent data...</p>
+        </section>
+
+        <section class="card">
+            <h2>🍽️ AI Meal Logger</h2>
+            <p>Type what you ate (e.g., "poha" or "paneer butter masala") and we'll estimate the rest!</p>
+            <div class="input-group">
+                <input type="text" id="meal-input" placeholder="What did you eat?">
+                <button onclick="logMeal()">Log Meal</button>
+            </div>
+            <div id="meal-results" class="results-container hidden">
+                <h3>Estimated Nutrition</h3>
+                <div class="nutrition-grid">
+                    <div class="nutrient">
+                        <span class="label">Calories</span>
+                        <span class="value" id="meal-calories">--</span>
+                    </div>
+                    <div class="nutrient">
+                        <span class="label">Protein</span>
+                        <span class="value" id="meal-protein">--</span>
+                    </div>
+                    <div class="nutrient">
+                        <span class="label">Carbs</span>
+                        <span class="value" id="meal-carbs">--</span>
+                    </div>
+                    <div class="nutrient">
+                        <span class="label">Fat</span>
+                        <span class="value" id="meal-fat">--</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>😴 Sleep Quality Score</h2>
+            <p>Log your sleep to get a comprehensive sleep score.</p>
+            <div class="input-group vertical">
+                <label for="sleep-hours">Hours Slept:</label>
+                <input type="number" id="sleep-hours" min="0" max="24" step="0.5" placeholder="e.g., 7.5">
+
+                <label for="sleep-quality">How did you feel waking up?</label>
+                <select id="sleep-quality">
+                    <option value="5">Very Rested & Energized</option>
+                    <option value="4">Good, mostly rested</option>
+                    <option value="3">Okay, slightly groggy</option>
+                    <option value="2">Tired, hard to wake up</option>
+                    <option value="1">Exhausted</option>
+                </select>
+
+                <button onclick="logSleep()">Calculate Sleep Score</button>
+            </div>
+            <div id="sleep-results" class="results-container hidden">
+                <h3>Your Sleep Score: <span id="sleep-score-value">--</span>/100</h3>
+                <p id="sleep-feedback"></p>
+            </div>
+        </section>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
