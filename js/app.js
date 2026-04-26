@@ -527,40 +527,93 @@ async function generateDashInsight() {
 }
 
 // 2. Meal Search
+const localFoodDB = {
+  "rice": [{ name: "Cooked White Rice", unit: "cup", qty: 1, cals: 205, protein: 4, carbs: 45, fat: 0 }],
+  "milk": [{ name: "Whole Milk", unit: "ml", qty: 250, cals: 150, protein: 8, carbs: 12, fat: 8 }],
+  "chicken": [{ name: "Chicken Breast (cooked)", unit: "grams", qty: 100, cals: 165, protein: 31, carbs: 0, fat: 3 }],
+  "egg": [{ name: "Boiled Egg", unit: "large egg(s)", qty: 1, cals: 78, protein: 6, carbs: 1, fat: 5 }],
+  "poha": [{ name: "Poha", unit: "bowl", qty: 1, cals: 250, protein: 5, carbs: 40, fat: 8 }],
+  "paneer": [{ name: "Paneer", unit: "grams", qty: 100, cals: 265, protein: 11, carbs: 1, fat: 20 }]
+};
+
 async function searchFood() {
   const inp = document.getElementById('ai-food-search');
   const resDiv = document.getElementById('ai-food-results');
-  if(!inp.value) return;
+  const query = inp.value.toLowerCase().trim();
+  if(!query) return;
 
   const btn = inp.nextElementSibling;
   btn.innerText = '...';
   btn.disabled = true;
 
+  let data = [];
+
   try {
-    const txt = await callAI([{role: 'user', content: `You are a nutrition database. For the food '${inp.value}', return ONLY a JSON array of 1-3 serving options. Format: [{"name":"...","calories":N,"protein":N,"carbs":N,"fat":N}]. Use realistic Indian/international values.`}]);
+    // Attempt AI search
+    const txt = await callAI([{role: 'user', content: `You are a nutrition database. For the food '${query}', return ONLY a JSON array of 1-3 serving options. Format: [{"name":"...","unit":"cup/ml/grams/piece","qty":1,"cals":N,"protein":N,"carbs":N,"fat":N}]. Ensure 'qty' is a number.`}]);
 
     // Extract JSON from response
     const jsonStr = txt.substring(txt.indexOf('['), txt.lastIndexOf(']') + 1);
-    const data = JSON.parse(jsonStr);
-
-    resDiv.innerHTML = '';
-    data.forEach(f => {
-      resDiv.innerHTML += `
-        <div class="nutrition-result">
-          <div>
-            <div style="font-weight:600;">${f.name}</div>
-            <div class="macros-row">${f.calories}kcal · P:${f.protein}g · C:${f.carbs}g · F:${f.fat}g</div>
-          </div>
-          <button onclick='addMealData({name:"${f.name}", cals:${f.calories}, protein:${f.protein}, carbs:${f.carbs}, fat:${f.fat}})'>+ Add</button>
-        </div>
-      `;
-    });
+    data = JSON.parse(jsonStr);
   } catch(e) {
-    showToast("AI search failed. Please use manual entry.");
+    console.warn("AI search failed, falling back to local dictionary.");
+    // Fallback local search
+    const exactMatch = localFoodDB[query];
+    if (exactMatch) {
+      data = exactMatch;
+    } else {
+      // Find partial matches
+      const matches = Object.keys(localFoodDB).filter(k => query.includes(k) || k.includes(query));
+      if (matches.length > 0) {
+        data = localFoodDB[matches[0]];
+      } else {
+        // Generic fallback if nothing matches
+        data = [{ name: query, unit: "serving(s)", qty: 1, cals: 200, protein: 5, carbs: 20, fat: 10 }];
+        showToast("Using estimated values.");
+      }
+    }
   } finally {
     btn.innerText = 'Search';
     btn.disabled = false;
   }
+
+  resDiv.innerHTML = '';
+  data.forEach((f, index) => {
+    // Save to window variable so button can reference it
+    window[`tempFoodData_${index}`] = f;
+    resDiv.innerHTML += `
+      <div class="nutrition-result" style="display:flex; flex-direction:column; gap:8px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+          <div>
+            <div style="font-weight:600;">${f.name}</div>
+            <div class="macros-row">Per ${f.qty} ${f.unit}: ${f.cals}kcal · P:${f.protein}g · C:${f.carbs}g · F:${f.fat}g</div>
+          </div>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <input type="number" id="qty-input-${index}" value="${f.qty}" style="width:70px; margin-bottom:0;" step="0.1" min="0.1">
+          <span style="font-size:14px; color:var(--ink2);">${f.unit}</span>
+          <button style="margin-left:auto; padding:6px 12px;" onclick='handleDynamicAdd(${index})'>+ Add</button>
+        </div>
+      </div>
+    `;
+  });
+}
+
+function handleDynamicAdd(index) {
+  const f = window[`tempFoodData_${index}`];
+  const inputEl = document.getElementById(`qty-input-${index}`);
+  const userQty = parseFloat(inputEl.value) || f.qty;
+
+  // Calculate multiplier based on base qty
+  const multiplier = userQty / f.qty;
+
+  addMealData({
+    name: `${f.name} (${userQty} ${f.unit})`,
+    cals: Math.round(f.cals * multiplier),
+    protein: Math.round(f.protein * multiplier),
+    carbs: Math.round(f.carbs * multiplier),
+    fat: Math.round(f.fat * multiplier)
+  });
 }
 
 // 3. AI Assistant Chat
