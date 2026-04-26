@@ -50,7 +50,30 @@
         <span>✦</span> <span id="ai-insight-text">Generating your daily insight...</span>
       </div>
 
-      <h1 class="fraunces" id="greeting" style="margin-bottom: 24px;">Good morning ✦</h1>
+      <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:24px;">
+        <h1 class="fraunces" id="greeting" style="margin-bottom: 0;">Good morning ✦</h1>
+        <div style="text-align:right;">
+          <div style="font-size:12px; color:var(--ink2); font-weight:600; text-transform:uppercase; letter-spacing:1px;">Current Streak</div>
+          <div class="fraunces" style="font-size:24px; color:var(--amber);"><span id="dash-streak">0</span> 🔥</div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:24px;">
+        <div class="card" style="background: linear-gradient(135deg, var(--purple-l), var(--bg)); border-color: var(--purple);">
+          <h2 style="color: var(--purple);">Vitals Readiness</h2>
+          <p style="font-size:14px; color:var(--ink2); margin-bottom:15px;">Based on your sleep, cycle, and mood.</p>
+          <div style="display:flex; align-items:center; gap:20px;">
+            <div class="fraunces" style="font-size: 56px; color: var(--purple); line-height:1;" id="dash-readiness-score">--</div>
+            <div>
+              <div id="dash-readiness-label" style="font-weight:600; font-size:18px; margin-bottom:4px;">Analysing...</div>
+              <div id="dash-readiness-desc" style="font-size:14px; color:var(--ink2);">Log more data to get a readiness score.</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <!-- Empty column to balance grid or future use -->
+        </div>
+      </div>
 
       <div class="grid-3" style="margin-bottom: 24px;">
         <div class="card">
@@ -172,9 +195,17 @@
         </div>
 
         <div class="card">
-          <h2>Notes <span id="notes-saved" style="color: var(--green); font-size: 14px; opacity: 0; transition: opacity 0.3s;">✓ Saved</span></h2>
-          <textarea id="log-notes" rows="3" placeholder="Symptoms, notes..."></textarea>
-          <button onclick="saveLog('notes')">Save notes</button>
+          <h2>Symptoms <span id="symptoms-saved" style="color: var(--green); font-size: 14px; opacity: 0; transition: opacity 0.3s;">✓ Saved</span></h2>
+          <div class="pill-group" id="symptom-pills">
+            <div class="pill" data-sym="Cramps">Cramps</div>
+            <div class="pill" data-sym="Bloating">Bloating</div>
+            <div class="pill" data-sym="Headache">Headache</div>
+            <div class="pill" data-sym="Fatigue">Fatigue</div>
+            <div class="pill" data-sym="Cravings">Cravings</div>
+            <div class="pill" data-sym="Acne">Acne</div>
+          </div>
+          <textarea id="log-notes" rows="2" placeholder="Other notes..." style="margin-top:10px;"></textarea>
+          <button onclick="saveLog('notes')">Save</button>
         </div>
       </div>
     </section>
@@ -206,6 +237,11 @@
               <button class="ai-btn" onclick="searchFood()">Search</button>
             </div>
             <div id="ai-food-results"></div>
+
+            <div id="saved-meals-container" style="margin-top:20px; display:none;">
+              <h3 style="font-size:14px; color:var(--ink2); text-transform:uppercase; margin-bottom:10px;">⭐ Favorites</h3>
+              <div id="saved-meals-list"></div>
+            </div>
 
             <div style="margin-top:20px; font-size: 14px;">
               <a href="#" style="color:var(--ink2);" onclick="document.getElementById('manual-food').style.display='block'; return false;">Enter manually instead</a>
@@ -348,6 +384,20 @@
     </section>
 
   </main>
+
+  <!-- MODAL -->
+  <div id="tutorial-modal" class="modal-overlay">
+    <div class="modal-content card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2 id="modal-title" style="margin:0;">Workout Tutorial</h2>
+        <button class="secondary" style="padding:4px 10px;" onclick="closeModal()">✕</button>
+      </div>
+      <div id="modal-body" style="font-size:15px; color:var(--ink); line-height:1.6;">
+        <!-- JS fills this -->
+      </div>
+      <button style="width:100%; margin-top:24px;" onclick="closeModal()">Got it</button>
+    </div>
+  </div>
 
   <!-- TOAST -->
   <div id="toast" style="position: fixed; bottom: -50px; left: 50%; transform: translateX(-50%); background: var(--ink); color: white; padding: 12px 24px; border-radius: 8px; transition: bottom 0.3s; z-index: 100;"></div>

@@ -27,17 +27,18 @@ document.getElementById('sidebar-date').innerText = new Date().toLocaleDateStrin
 document.querySelectorAll('.nav-links a').forEach(link => {
   link.addEventListener('click', (e) => {
     e.preventDefault();
+    const target = e.currentTarget;
     document.querySelectorAll('.nav-links a, .page').forEach(el => el.classList.remove('active'));
-    e.target.classList.add('active');
-    document.getElementById(e.target.dataset.page).classList.add('active');
+    target.classList.add('active');
+    document.getElementById(target.dataset.page).classList.add('active');
 
     // Page specific logic triggers
-    if(e.target.dataset.page === 'dashboard') renderDashboard();
-    if(e.target.dataset.page === 'log') populateLogToday();
-    if(e.target.dataset.page === 'meals') renderMeals();
-    if(e.target.dataset.page === 'trends') renderTrends();
-    if(e.target.dataset.page === 'cycle') renderCycle();
-    if(e.target.dataset.page === 'workout') renderWorkout();
+    if(target.dataset.page === 'dashboard') renderDashboard();
+    if(target.dataset.page === 'log') populateLogToday();
+    if(target.dataset.page === 'meals') renderMeals();
+    if(target.dataset.page === 'trends') renderTrends();
+    if(target.dataset.page === 'cycle') renderCycle();
+    if(target.dataset.page === 'workout') renderWorkout();
   });
 });
 
@@ -76,6 +77,17 @@ function getCycleData() {
   return { day: currentDay, phase, color, desc, ovDay };
 }
 
+// --- MODAL LOGIC ---
+function openModal(title, bodyHTML) {
+  document.getElementById('modal-title').innerText = title;
+  document.getElementById('modal-body').innerHTML = bodyHTML;
+  document.getElementById('tutorial-modal').classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('tutorial-modal').classList.remove('active');
+}
+
 // --- DASHBOARD ---
 let charts = {};
 
@@ -96,6 +108,50 @@ function renderDashboard() {
 
   const todayKeyStr = todayKey();
   const todayLog = state.logs[todayKeyStr];
+
+  // Calculate Streak
+  let streak = 0;
+  for (let i = keys.length - 1; i >= 0; i--) {
+    const k = keys[i];
+    if (state.logs[k] && Object.keys(state.logs[k]).length > 0 && state.logs[k].water >= 3) {
+      streak++;
+    } else if (k !== todayKeyStr) {
+      break; // break if missed a past day
+    }
+  }
+  document.getElementById('dash-streak').innerText = streak;
+
+  // Calculate Readiness
+  let readiness = 100;
+  let rLabel = "Optimal";
+  let rDesc = "You are primed for peak performance today.";
+
+  const yestLog = state.logs[keys[5]]; // yesterday is index 5 in getLast(7)
+
+  if (yestLog && yestLog.sleep) {
+    if (yestLog.sleep < 6) readiness -= 20;
+    else if (yestLog.sleep > 9) readiness -= 5;
+  } else {
+    readiness -= 15; // no sleep logged
+  }
+
+  if (yestLog && yestLog.exercise > 45) readiness -= 10; // High fatigue
+  if (todayLog.mood && todayLog.mood < 5) readiness -= 15;
+
+  const cData = getCycleData();
+  if (cData && cData.phase === 'Menstrual') readiness -= 10;
+
+  if (readiness < 60) {
+    rLabel = "Recovery";
+    rDesc = "Take it easy today. Focus on light movement and hydration.";
+  } else if (readiness < 80) {
+    rLabel = "Moderate";
+    rDesc = "You're in good shape for a standard routine.";
+  }
+
+  document.getElementById('dash-readiness-score').innerText = Math.max(0, readiness);
+  document.getElementById('dash-readiness-label').innerText = rLabel;
+  document.getElementById('dash-readiness-desc').innerText = rDesc;
 
   document.getElementById('dash-sleep').innerText = avg(sleeps) + 'h';
   document.getElementById('dash-water').innerText = avg(waters);
@@ -199,6 +255,12 @@ function setupLogUI() {
       p.classList.add('active');
     };
   });
+
+  document.querySelectorAll('#symptom-pills .pill').forEach(p => {
+    p.onclick = () => {
+      p.classList.toggle('active');
+    };
+  });
 }
 
 function populateLogToday() {
@@ -221,6 +283,10 @@ function populateLogToday() {
 
   if(log.weight) document.getElementById('log-weight').value = log.weight;
   if(log.notes) document.getElementById('log-notes').value = log.notes;
+
+  document.querySelectorAll('#symptom-pills .pill').forEach(p => {
+    p.classList.toggle('active', log.symptoms && log.symptoms.includes(p.dataset.sym));
+  });
 }
 
 function saveLog(type) {
@@ -234,7 +300,10 @@ function saveLog(type) {
     log.exercise = parseInt(document.getElementById('log-ex-dur').value);
   }
   if (type === 'weight') log.weight = parseFloat(document.getElementById('log-weight').value);
-  if (type === 'notes') log.notes = document.getElementById('log-notes').value;
+  if (type === 'notes') {
+    log.notes = document.getElementById('log-notes').value;
+    log.symptoms = Array.from(document.querySelectorAll('#symptom-pills .pill.active')).map(p => p.dataset.sym);
+  }
 
   saveState();
   flashSave(`${type}-saved`);
@@ -261,6 +330,35 @@ function saveCalGoal() {
 function renderMeals() {
   document.getElementById('meal-goal-input').value = state.calGoal;
   const log = getDayLog(todayKey());
+
+  // Render Favorites
+  const favList = document.getElementById('saved-meals-list');
+  const favContainer = document.getElementById('saved-meals-container');
+  if (state.savedMeals && state.savedMeals.length > 0) {
+    favContainer.style.display = 'block';
+    favList.innerHTML = '';
+    state.savedMeals.forEach((m, idx) => {
+      const mealJson = encodeURIComponent(JSON.stringify(m));
+      favList.innerHTML += `
+        <div class="saved-meal-item">
+          <div>
+            <div style="font-weight:600;">${m.name}</div>
+            <div style="font-size:12px; color:var(--ink2);">${m.cals}kcal</div>
+          </div>
+          <button class="secondary fav-add-btn" style="padding:6px 12px; font-size:12px;" data-meal="${mealJson}">+ Add</button>
+        </div>
+      `;
+    });
+
+    favList.querySelectorAll('.fav-add-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const mealObj = JSON.parse(decodeURIComponent(e.currentTarget.dataset.meal));
+        addMealData(mealObj);
+      });
+    });
+  } else {
+    favContainer.style.display = 'none';
+  }
 
   let tc = 0, tp = 0, tcar = 0, tf = 0;
   log.meals.forEach(m => { tc+=m.cals; tp+=m.protein; tcar+=m.carbs; tf+=m.fat; });
@@ -302,7 +400,10 @@ function renderMeals() {
               <div style="font-weight:600;">${m.name}</div>
               <div class="macros-row">${m.cals}kcal · P:${m.protein}g · C:${m.carbs}g · F:${m.fat}g</div>
             </div>
-            <button class="secondary" style="padding:4px 8px; font-size:12px;" onclick="delMeal('${type}', ${idx})">✕</button>
+            <div style="display:flex; gap:5px;">
+              <button class="secondary" style="padding:4px 8px; font-size:12px; background:var(--amber-l); color:var(--amber);" onclick='saveFavorite(${JSON.stringify(m)})'>⭐</button>
+              <button class="secondary" style="padding:4px 8px; font-size:12px;" onclick="delMeal('${type}', ${idx})">✕</button>
+            </div>
           </div>
         `;
       });
@@ -343,6 +444,20 @@ function addManualFood() {
 
   addMealData({ name, cals, protein, carbs, fat });
   document.getElementById('manual-food').style.display = 'none';
+}
+
+function saveFavorite(mealObj) {
+  if(!state.savedMeals) state.savedMeals = [];
+  // Ensure we don't save duplicates by name
+  if(state.savedMeals.find(m => m.name === mealObj.name)) {
+    showToast('Already in favorites!');
+    return;
+  }
+  const cleanMeal = { name: mealObj.name, cals: mealObj.cals, protein: mealObj.protein, carbs: mealObj.carbs, fat: mealObj.fat };
+  state.savedMeals.push(cleanMeal);
+  saveState();
+  renderMeals();
+  showToast('Saved to favorites!');
 }
 
 // --- CYCLE UI ---
@@ -386,23 +501,23 @@ function saveCycle() {
 // --- WORKOUT UI ---
 const workouts = {
   Menstrual: [
-    { n: "Gentle Flow Yoga", d: 20, i: 1, desc: "Restorative poses to relieve cramps." },
-    { n: "Slow Nature Walk", d: 30, i: 1, desc: "Light movement to boost mood." },
-    { n: "Meditation", d: 15, i: 0, desc: "Deep breathing for pain management." }
+    { n: "Gentle Flow Yoga", d: 20, i: 1, desc: "Restorative poses to relieve cramps.", steps: ["1. Child's Pose: Hold for 2 minutes to stretch lower back.", "2. Cat-Cow: 10 slow reps to mobilize spine.", "3. Supine Twist: Hold 1 minute per side.", "4. Savasana: Rest for 5 minutes."] },
+    { n: "Slow Nature Walk", d: 30, i: 1, desc: "Light movement to boost mood.", steps: ["1. Put on comfortable shoes.", "2. Maintain a leisurely pace where you can easily hold a conversation.", "3. Focus on deep breathing and observing your surroundings."] },
+    { n: "Meditation", d: 15, i: 0, desc: "Deep breathing for pain management.", steps: ["1. Sit or lie in a comfortable position.", "2. Inhale deeply through the nose for 4 seconds.", "3. Hold for 4 seconds.", "4. Exhale through the mouth for 6 seconds.", "5. Repeat for 15 minutes."] }
   ],
   Follicular: [
-    { n: "Cardio Run", d: 30, i: 3, desc: "Capitalise on rising estrogen levels." },
-    { n: "Lower Body Strength", d: 45, i: 3, desc: "Build muscle during this anabolic phase." },
-    { n: "HIIT Session", d: 25, i: 4, desc: "High energy, fast paced intervals." }
+    { n: "Cardio Run", d: 30, i: 3, desc: "Capitalise on rising estrogen levels.", steps: ["1. Dynamic warmup (high knees, butt kicks) for 5 mins.", "2. Jog at moderate pace for 20 mins.", "3. Cooldown walk and stretch calves/hamstrings for 5 mins."] },
+    { n: "Lower Body Strength", d: 45, i: 3, desc: "Build muscle during this anabolic phase.", steps: ["1. Warmup: 5 mins light cardio.", "2. Goblet Squats: 3 sets of 12.", "3. Romanian Deadlifts: 3 sets of 10.", "4. Walking Lunges: 3 sets of 10 per leg.", "5. Glute Bridges: 3 sets of 15.", "6. Cooldown stretching."] },
+    { n: "HIIT Session", d: 25, i: 4, desc: "High energy, fast paced intervals.", steps: ["1. Warmup: 3 mins jumping jacks.", "2. Circuit (40s work, 20s rest): Burpees, Mountain Climbers, Squat Jumps, Plank.", "3. Repeat circuit 4 times.", "4. Cooldown stretch."] }
   ],
   Ovulation: [
-    { n: "Peak Performance Lift", d: 50, i: 5, desc: "Go for personal bests. Energy is highest." },
-    { n: "Spin Class / Fast Cycle", d: 45, i: 5, desc: "Intense cardio session." }
+    { n: "Peak Performance Lift", d: 50, i: 5, desc: "Go for personal bests. Energy is highest.", steps: ["1. Warmup thoroughly.", "2. Heavy Barbell Squats: 4 sets of 5 reps (rest 2-3 mins between).", "3. Bench Press or Pushups: 4 sets of 8.", "4. Pull-ups or Lat Pulldowns: 3 sets of 8.", "5. Core work: Russian twists."] },
+    { n: "Spin Class / Fast Cycle", d: 45, i: 5, desc: "Intense cardio session.", steps: ["1. 5 min easy spin warmup.", "2. 10x 1-minute hard sprints with 1-minute easy recovery.", "3. 15 min sustained moderate-hard effort.", "4. 5 min easy cooldown."] }
   ],
   Luteal: [
-    { n: "Pilates Core", d: 30, i: 2, desc: "Low impact, high burn. Good for early luteal." },
-    { n: "Moderate Swim", d: 35, i: 2, desc: "Gentle on joints if experiencing bloating." },
-    { n: "Yin Yoga", d: 40, i: 1, desc: "Deep stretching for late luteal phase." }
+    { n: "Pilates Core", d: 30, i: 2, desc: "Low impact, high burn. Good for early luteal.", steps: ["1. The Hundred: 10 breath cycles.", "2. Roll-Ups: 10 reps slowly.", "3. Single Leg Circles: 5 each direction per leg.", "4. Forearm Plank: Hold for 60 seconds (repeat 3x)."] },
+    { n: "Moderate Swim", d: 35, i: 2, desc: "Gentle on joints if experiencing bloating.", steps: ["1. 4 lengths easy warmup.", "2. 10 lengths moderate freestyle.", "3. 4 lengths breaststroke or backstroke.", "4. 4 lengths easy cooldown."] },
+    { n: "Yin Yoga", d: 40, i: 1, desc: "Deep stretching for late luteal phase.", steps: ["1. Butterfly Pose: Hold 3-5 mins.", "2. Pigeon Pose: Hold 3-5 mins.", "3. Sphinx Pose: Hold 3 mins per side.", "4. Supported Bridge: Hold 5 mins.", "5. Extended Savasana."] }
   ]
 };
 
@@ -427,18 +542,29 @@ function renderWorkout() {
       pips += `<span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${pc}; margin-right:3px;"></span>`;
     }
 
+    const stepsJSON = JSON.stringify(w.steps).replace(/"/g, '&quot;');
     wGrid.innerHTML += `
-      <div class="card" style="border-left: 4px solid ${cd.color}">
-        <h3 style="margin-bottom:5px; font-family:'Instrument Sans', sans-serif;">${w.n}</h3>
+      <div class="card" style="border-left: 4px solid ${cd.color}; cursor:pointer;" onclick="openWorkoutTutorial('${w.n}', ${stepsJSON})">
+        <h3 style="margin-bottom:5px; font-family:'Instrument Sans', sans-serif; color:var(--purple);">${w.n}</h3>
         <div style="font-size:12px; color:var(--ink2); margin-bottom:10px; display:flex; align-items:center; gap:10px;">
           <span>⏱ ${w.d} min</span>
           <div>${pips}</div>
         </div>
         <p style="font-size:14px;">${w.desc}</p>
-        <button class="secondary" style="margin-top:15px; width:100%;" onclick="logWorkout('${w.n}', ${w.d})">Log this workout</button>
+        <div style="display:flex; gap:10px; margin-top:15px;">
+          <button class="secondary" style="flex:1;" onclick="event.stopPropagation(); logWorkout('${w.n}', ${w.d})">Log it</button>
+        </div>
       </div>
     `;
   });
+}
+
+function openWorkoutTutorial(name, steps) {
+  let html = `<p style="margin-bottom:15px;">Follow these steps to complete the <strong>${name}</strong> workout.</p>`;
+  steps.forEach(s => {
+    html += `<div class="tutorial-step">${s}</div>`;
+  });
+  openModal(name, html);
 }
 
 function logWorkout(type, dur) {
@@ -482,13 +608,15 @@ function buildAiPrompt() {
   const waters = keys.map(k => state.logs[k]?.water);
   const cd = getCycleData();
   const log = getDayLog(todayKey());
+  const symptoms = log.symptoms && log.symptoms.length > 0 ? log.symptoms.join(', ') : 'None';
 
   return `User health data:
 Avg Sleep 7d: ${avg(sleeps)}h
 Avg Water 7d: ${avg(waters)}
 Today Cals: ${log.cals} / ${state.calGoal}
 Cycle: ${cd ? cd.phase + ' phase, Day ' + cd.day : 'Not set'}
-Latest weight: ${log.weight || 'unknown'}`;
+Latest weight: ${log.weight || 'unknown'}
+Today Symptoms: ${symptoms}`;
 }
 
 async function callAI(messages, max_tokens = 400) {

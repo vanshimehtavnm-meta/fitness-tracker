@@ -14,7 +14,8 @@ function loadState() {
     calGoal: 2000,
     cycleStart: null,
     cycleLen: 28,
-    periodLen: 5
+    periodLen: 5,
+    savedMeals: [] // For favorites
   };
 }
 
@@ -37,6 +38,7 @@ function getDayLog(k) {
       cals: 0,
       weight: null,
       notes: '',
+      symptoms: [], // Added symptoms tracking
       meals: []
     };
   }
@@ -87,6 +89,7 @@ function seedData(s) {
       cals: 1800 + Math.floor(Math.random() * 400),
       weight: Number((62.0 + (Math.random() * 1.5)).toFixed(1)),
       notes: i === 6 ? "Feeling great today!" : "",
+      symptoms: i % 3 === 0 ? ["Bloating", "Fatigue"] : [],
       meals: [
         { type: 'Breakfast', ...indianMeals[Math.floor(Math.random() * indianMeals.length)] },
         { type: 'Lunch', ...indianMeals[Math.floor(Math.random() * indianMeals.length)] }

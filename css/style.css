@@ -243,6 +243,36 @@ button.ai-btn:hover {
   100% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0); }
 }
 
+/* Modal */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-content {
+  width: 100%;
+  max-width: 500px;
+  margin-bottom: 0;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-overlay.active {
+  display: flex;
+}
+
+.tutorial-step {
+  margin-bottom: 12px;
+  padding-left: 15px;
+  border-left: 3px solid var(--purple);
+}
+
 /* Specific Feature UI */
 .nutrition-result {
   background: var(--surface2);
@@ -252,6 +282,17 @@ button.ai-btn:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.saved-meal-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  background: var(--surface);
 }
 
 .macros-row {
