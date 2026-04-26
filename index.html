@@ -1,77 +1,358 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HerHealth - Smart Health Tracker</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vitals</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=Instrument+Sans:wght@400..700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>HerHealth Tracker</h1>
-            <p>Your intelligent, personalized health companion.</p>
-        </header>
 
-        <section class="card tip-card">
-            <h2>💡 Your Daily AI Health Tip</h2>
-            <p id="daily-tip">Analyzing your recent data...</p>
-        </section>
+  <nav class="sidebar">
+    <div class="logo fraunces">◎ vitals</div>
+    <ul class="nav-links">
+      <li><a href="#" data-page="dashboard" class="active" title="Dashboard">
+        <span class="nav-icon">📊</span><span class="nav-text">Dashboard</span>
+      </a></li>
+      <li><a href="#" data-page="log" title="Log Today">
+        <span class="nav-icon">📝</span><span class="nav-text">Log Today</span>
+      </a></li>
+      <li><a href="#" data-page="meals" title="Meals & Calories">
+        <span class="nav-icon">🍽️</span><span class="nav-text">Meals & Calories</span>
+      </a></li>
+      <li><a href="#" data-page="workout" title="Workout">
+        <span class="nav-icon">💪</span><span class="nav-text">Workout</span>
+      </a></li>
+      <li><a href="#" data-page="cycle" title="Cycle Tracker">
+        <span class="nav-icon">🔄</span><span class="nav-text">Cycle Tracker</span>
+      </a></li>
+      <li><a href="#" data-page="trends" title="Trends">
+        <span class="nav-icon">📈</span><span class="nav-text">Trends</span>
+      </a></li>
+      <li><a href="#" data-page="assistant" title="AI Assistant">
+        <span class="nav-icon">✦</span><span class="nav-text">AI Assistant</span>
+      </a></li>
+    </ul>
+    <div class="sidebar-footer" id="sidebar-date"></div>
+  </nav>
 
-        <section class="card">
-            <h2>🍽️ AI Meal Logger</h2>
-            <p>Type what you ate (e.g., "poha" or "paneer butter masala") and we'll estimate the rest!</p>
-            <div class="input-group">
-                <input type="text" id="meal-input" placeholder="What did you eat?">
-                <button onclick="logMeal()">Log Meal</button>
+  <main class="main-content">
+
+    <!-- DASHBOARD -->
+    <section id="dashboard" class="page active">
+      <div id="ai-insight-chip" class="ai-chip" onclick="document.querySelector('[data-page=\'assistant\']').click()">
+        <span>✦</span> <span id="ai-insight-text">Generating your daily insight...</span>
+      </div>
+
+      <h1 class="fraunces" id="greeting" style="margin-bottom: 24px;">Good morning ✦</h1>
+
+      <div class="grid-3" style="margin-bottom: 24px;">
+        <div class="card">
+          <h2>Avg Sleep</h2>
+          <div class="fraunces" style="font-size: 32px; color: var(--green);" id="dash-sleep">--</div>
+        </div>
+        <div class="card">
+          <h2>Avg Water</h2>
+          <div class="fraunces" style="font-size: 32px; color: var(--blue);" id="dash-water">--</div>
+        </div>
+        <div class="card">
+          <h2>Avg Exercise</h2>
+          <div class="fraunces" style="font-size: 32px; color: var(--purple);" id="dash-exercise">--</div>
+        </div>
+        <div class="card">
+          <h2>Today's Mood</h2>
+          <div class="fraunces" style="font-size: 32px; color: var(--pink);" id="dash-mood">--</div>
+        </div>
+        <div class="card">
+          <h2>Calories Today</h2>
+          <div class="fraunces" style="font-size: 32px; color: var(--amber);" id="dash-cals">--</div>
+        </div>
+        <div class="card">
+          <h2>Latest Weight</h2>
+          <div class="fraunces" style="font-size: 32px; color: var(--ink2);" id="dash-weight">--</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h2>This week at a glance</h2>
+          <canvas id="glanceChart"></canvas>
+        </div>
+        <div>
+          <div class="card">
+            <h2>Mood Trend</h2>
+            <canvas id="moodDashChart"></canvas>
+          </div>
+          <div class="card" id="dash-cycle-card" style="cursor: pointer;" onclick="document.querySelector('[data-page=\'workout\']').click()">
+            <h2>Cycle Snapshot</h2>
+            <div id="dash-cycle-banner" style="padding: 10px; border-radius: 6px; margin-bottom: 10px; font-weight: bold;">--</div>
+            <p id="dash-cycle-desc" style="color: var(--ink2); font-size: 14px;">--</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LOG TODAY -->
+    <section id="log" class="page">
+      <h1 class="fraunces" style="margin-bottom: 24px;">Log Today</h1>
+      <div class="grid-2">
+        <div class="card">
+          <h2>Sleep <span id="sleep-saved" style="color: var(--green); font-size: 14px; opacity: 0; transition: opacity 0.3s;">✓ Saved</span></h2>
+          <div class="pill-group" id="sleep-pills">
+            <div class="pill" data-val="5">5h</div>
+            <div class="pill" data-val="6">6h</div>
+            <div class="pill" data-val="7">7h</div>
+            <div class="pill" data-val="7.5">7.5h</div>
+            <div class="pill" data-val="8">8h</div>
+            <div class="pill" data-val="9">9h</div>
+          </div>
+          <input type="number" id="log-sleep-hrs" placeholder="Hours slept" step="0.5">
+          <select id="log-sleep-q">
+            <option value="Poor">Poor</option>
+            <option value="Fair">Fair</option>
+            <option value="Good" selected>Good</option>
+            <option value="Excellent">Excellent</option>
+          </select>
+          <button onclick="saveLog('sleep')">Save sleep</button>
+        </div>
+
+        <div class="card">
+          <h2>Water <span id="water-saved" style="color: var(--green); font-size: 14px; opacity: 0; transition: opacity 0.3s;">✓ Saved</span></h2>
+          <div class="water-tracker" id="water-dots">
+            <!-- Rendered via JS -->
+          </div>
+          <div style="text-align: center; color: var(--ink2); font-size: 14px;" id="water-label">0 / 8 glasses</div>
+        </div>
+
+        <div class="card">
+          <h2>Mood <span id="mood-saved" style="color: var(--green); font-size: 14px; opacity: 0; transition: opacity 0.3s;">✓ Saved</span></h2>
+          <div class="pill-group" id="mood-pills">
+            <div class="pill" data-val="2" style="font-size: 24px;">😔</div>
+            <div class="pill" data-val="4" style="font-size: 24px;">😕</div>
+            <div class="pill" data-val="6" style="font-size: 24px;">😐</div>
+            <div class="pill" data-val="8" style="font-size: 24px;">🙂</div>
+            <div class="pill" data-val="10" style="font-size: 24px;">😄</div>
+          </div>
+          <button onclick="saveLog('mood')">Save mood</button>
+        </div>
+
+        <div class="card">
+          <h2>Exercise <span id="exercise-saved" style="color: var(--green); font-size: 14px; opacity: 0; transition: opacity 0.3s;">✓ Saved</span></h2>
+          <div class="pill-group" id="ex-pills">
+            <div class="pill" data-type="Walk" data-dur="30">Walk 30m</div>
+            <div class="pill" data-type="Run" data-dur="30">Run 30m</div>
+            <div class="pill" data-type="Yoga" data-dur="45">Yoga 45m</div>
+            <div class="pill" data-type="Gym" data-dur="60">Gym 60m</div>
+            <div class="pill" data-type="Cycle" data-dur="30">Cycle 30m</div>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <select id="log-ex-type">
+              <option value="">Select type...</option>
+              <option value="Walk">Walk</option>
+              <option value="Run">Run</option>
+              <option value="Yoga">Yoga</option>
+              <option value="Gym">Gym</option>
+              <option value="Cycle">Cycle</option>
+            </select>
+            <input type="number" id="log-ex-dur" placeholder="Mins">
+          </div>
+          <button onclick="saveLog('exercise')">Save exercise</button>
+        </div>
+
+        <div class="card">
+          <h2>Weight <span id="weight-saved" style="color: var(--green); font-size: 14px; opacity: 0; transition: opacity 0.3s;">✓ Saved</span></h2>
+          <input type="number" id="log-weight" placeholder="Weight in kg" step="0.1">
+          <button onclick="saveLog('weight')">Save weight</button>
+        </div>
+
+        <div class="card">
+          <h2>Notes <span id="notes-saved" style="color: var(--green); font-size: 14px; opacity: 0; transition: opacity 0.3s;">✓ Saved</span></h2>
+          <textarea id="log-notes" rows="3" placeholder="Symptoms, notes..."></textarea>
+          <button onclick="saveLog('notes')">Save notes</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- MEALS & CALORIES -->
+    <section id="meals" class="page">
+      <h1 class="fraunces" style="margin-bottom: 24px;">Meals & Calories</h1>
+      <div class="grid-2">
+        <div>
+          <div class="card">
+            <h2>Calorie Goal</h2>
+            <div style="display:flex; gap:10px;">
+              <input type="number" id="meal-goal-input">
+              <button onclick="saveCalGoal()">Set</button>
             </div>
-            <div id="meal-results" class="results-container hidden">
-                <h3>Estimated Nutrition</h3>
-                <div class="nutrition-grid">
-                    <div class="nutrient">
-                        <span class="label">Calories</span>
-                        <span class="value" id="meal-calories">--</span>
-                    </div>
-                    <div class="nutrient">
-                        <span class="label">Protein</span>
-                        <span class="value" id="meal-protein">--</span>
-                    </div>
-                    <div class="nutrient">
-                        <span class="label">Carbs</span>
-                        <span class="value" id="meal-carbs">--</span>
-                    </div>
-                    <div class="nutrient">
-                        <span class="label">Fat</span>
-                        <span class="value" id="meal-fat">--</span>
-                    </div>
-                </div>
-            </div>
-        </section>
+          </div>
 
-        <section class="card">
-            <h2>😴 Sleep Quality Score</h2>
-            <p>Log your sleep to get a comprehensive sleep score.</p>
-            <div class="input-group vertical">
-                <label for="sleep-hours">Hours Slept:</label>
-                <input type="number" id="sleep-hours" min="0" max="24" step="0.5" placeholder="e.g., 7.5">
-
-                <label for="sleep-quality">How did you feel waking up?</label>
-                <select id="sleep-quality">
-                    <option value="5">Very Rested & Energized</option>
-                    <option value="4">Good, mostly rested</option>
-                    <option value="3">Okay, slightly groggy</option>
-                    <option value="2">Tired, hard to wake up</option>
-                    <option value="1">Exhausted</option>
-                </select>
-
-                <button onclick="logSleep()">Calculate Sleep Score</button>
+          <div class="card">
+            <h2>Log a Meal</h2>
+            <div class="pill-group" id="meal-type-tabs">
+              <div class="pill active" data-type="Breakfast">Breakfast</div>
+              <div class="pill" data-type="Lunch">Lunch</div>
+              <div class="pill" data-type="Dinner">Dinner</div>
+              <div class="pill" data-type="Snack">Snack</div>
             </div>
-            <div id="sleep-results" class="results-container hidden">
-                <h3>Your Sleep Score: <span id="sleep-score-value">--</span>/100</h3>
-                <p id="sleep-feedback"></p>
+
+            <div style="display:flex; gap:10px; margin-bottom: 15px;">
+              <input type="text" id="ai-food-search" placeholder="Search food with AI...">
+              <button class="ai-btn" onclick="searchFood()">Search</button>
             </div>
-        </section>
-    </div>
-    <script src="app.js"></script>
+            <div id="ai-food-results"></div>
+
+            <div style="margin-top:20px; font-size: 14px;">
+              <a href="#" style="color:var(--ink2);" onclick="document.getElementById('manual-food').style.display='block'; return false;">Enter manually instead</a>
+            </div>
+            <div id="manual-food" style="display:none; margin-top: 15px;">
+              <input type="text" id="man-name" placeholder="Food name">
+              <div style="display:flex; gap:10px;">
+                <input type="number" id="man-cals" placeholder="Cals">
+                <input type="number" id="man-pro" placeholder="Pro (g)">
+              </div>
+              <div style="display:flex; gap:10px;">
+                <input type="number" id="man-carbs" placeholder="Carb (g)">
+                <input type="number" id="man-fat" placeholder="Fat (g)">
+              </div>
+              <button onclick="addManualFood()">Add food</button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <h2>Today's Summary</h2>
+            <div class="grid-3" style="text-align: center; margin-bottom: 15px;">
+              <div>
+                <div style="font-size:12px; color:var(--ink2)">Consumed</div>
+                <div class="fraunces" style="font-size:24px" id="meal-sum-cals">0</div>
+              </div>
+              <div>
+                <div style="font-size:12px; color:var(--ink2)" id="meal-sum-rem-lbl">Remaining</div>
+                <div class="fraunces" style="font-size:24px" id="meal-sum-rem">0</div>
+              </div>
+              <div>
+                <div style="font-size:12px; color:var(--ink2)">Protein</div>
+                <div class="fraunces" style="font-size:24px" id="meal-sum-pro">0g</div>
+              </div>
+            </div>
+            <div style="height: 6px; background: var(--surface2); border-radius: 3px; overflow:hidden; margin-bottom: 20px;">
+              <div id="meal-progress" style="height: 100%; background: var(--green); width: 0%; transition: width 0.3s, background 0.3s;"></div>
+            </div>
+            <div style="max-width: 200px; margin: 0 auto;">
+              <canvas id="macroChart"></canvas>
+            </div>
+          </div>
+
+          <div class="card" id="meal-log-list">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WORKOUT -->
+    <section id="workout" class="page">
+      <h1 class="fraunces" style="margin-bottom: 24px;">Workout Plan</h1>
+      <div id="workout-banner" style="padding: 16px; border-radius: 10px; margin-bottom: 24px; font-weight: bold; background: var(--surface2);">
+        Cycle phase not set. Configure your cycle to get phase-specific workouts. <a href="#" onclick="document.querySelector('[data-page=\'cycle\']').click()">Set cycle</a>
+      </div>
+      <div class="grid-2" id="workout-grid">
+        <!-- Populated via JS -->
+      </div>
+    </section>
+
+    <!-- CYCLE TRACKER -->
+    <section id="cycle" class="page">
+      <h1 class="fraunces" style="margin-bottom: 24px;">Cycle Tracker</h1>
+      <div class="grid-2">
+        <div class="card">
+          <h2>Settings <span id="cycle-saved" style="color: var(--green); font-size: 14px; opacity: 0; transition: opacity 0.3s;">✓ Saved</span></h2>
+          <label style="display:block; margin-bottom: 5px; font-size: 14px;">Last period start date:</label>
+          <input type="date" id="cycle-start">
+          <div style="display:flex; gap:10px;">
+            <div>
+              <label style="display:block; margin-bottom: 5px; font-size: 14px;">Period length (days):</label>
+              <input type="number" id="cycle-per-len" value="5">
+            </div>
+            <div>
+              <label style="display:block; margin-bottom: 5px; font-size: 14px;">Cycle length (days):</label>
+              <input type="number" id="cycle-len" value="28">
+            </div>
+          </div>
+          <button onclick="saveCycle()">Update</button>
+        </div>
+
+        <div class="card">
+          <h2>Current Status</h2>
+          <div class="fraunces" style="font-size: 24px; color: var(--pink);" id="cycle-status">--</div>
+          <p style="margin-top: 10px; color: var(--ink2);" id="cycle-phase-desc">--</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Cycle Calendar (Current Cycle)</h2>
+        <div id="cycle-cal-grid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-top: 20px;">
+          <!-- JS populates circles -->
+        </div>
+        <div style="display: flex; gap: 15px; margin-top: 20px; font-size: 13px; color: var(--ink2);">
+          <span style="display:flex; align-items:center; gap:5px;"><span style="width:12px; height:12px; border-radius:50%; background:#FAEEF1;"></span> Period</span>
+          <span style="display:flex; align-items:center; gap:5px;"><span style="width:12px; height:12px; border-radius:50%; background:#E8F4EC;"></span> Fertile</span>
+          <span style="display:flex; align-items:center; gap:5px;"><span style="width:12px; height:12px; border-radius:50%; background:#FBF2E5;"></span> Ovulation</span>
+          <span style="display:flex; align-items:center; gap:5px;"><span style="width:12px; height:12px; border-radius:50%; border:2px solid var(--blue);"></span> Today</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- TRENDS -->
+    <section id="trends" class="page">
+      <h1 class="fraunces" style="margin-bottom: 24px;">Trends (Last 30 Days)</h1>
+      <div class="grid-2">
+        <div class="card"><h2>Sleep</h2><canvas id="tr-sleep"></canvas></div>
+        <div class="card"><h2>Water</h2><canvas id="tr-water"></canvas></div>
+        <div class="card"><h2>Exercise</h2><canvas id="tr-exercise"></canvas></div>
+        <div class="card"><h2>Mood</h2><canvas id="tr-mood"></canvas></div>
+        <div class="card"><h2>Calories</h2><canvas id="tr-cals"></canvas></div>
+        <div class="card"><h2>Weight</h2><canvas id="tr-weight"></canvas></div>
+      </div>
+    </section>
+
+    <!-- AI ASSISTANT -->
+    <section id="assistant" class="page">
+      <h1 class="fraunces" style="margin-bottom: 24px;">AI Assistant</h1>
+
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
+        <div class="pill" onclick="sendAiMsg('Analyse my sleep this week')">Analyse my sleep</div>
+        <div class="pill" onclick="sendAiMsg('What should I eat today?')">What should I eat?</div>
+        <div class="pill" onclick="sendAiMsg('Give me a workout tip for my cycle phase')">Workout tip</div>
+        <div class="pill" onclick="sendAiMsg('How are my calories trending?')">Calorie trend</div>
+      </div>
+
+      <div class="card" style="display: flex; flex-direction: column; height: 500px;">
+        <div id="chat-window" style="flex: 1; overflow-y: auto; padding-right: 10px; margin-bottom: 15px; display: flex; flex-direction: column; gap: 15px;">
+          <div style="align-self: flex-start; background: var(--ai-l); padding: 12px 16px; border-radius: 12px 12px 12px 0; max-width: 80%;">
+            <span style="color: var(--ai);">✦</span> Hello! I'm your Vitals AI assistant. How can I help you understand your health data today?
+          </div>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <input type="text" id="chat-input" placeholder="Ask about your health..." style="margin-bottom: 0;" onkeypress="if(event.key === 'Enter') sendAiMsg(this.value)">
+          <button class="ai-btn" onclick="sendAiMsg(document.getElementById('chat-input').value)">Send</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- TOAST -->
+  <div id="toast" style="position: fixed; bottom: -50px; left: 50%; transform: translateX(-50%); background: var(--ink); color: white; padding: 12px 24px; border-radius: 8px; transition: bottom 0.3s; z-index: 100;"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>
