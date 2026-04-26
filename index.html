@@ -1,30 +1,271 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fitness Tracker</title>
-    <link rel="stylesheet" href="css/style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vitals</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <header>
-        <h1>Fitness Tracker App</h1>
-    </header>
-    <main>
-        <section>
-            <h2>Your Health Data</h2>
-            <div id="data-display"></div>
-        </section>
-        <section>
-            <h2>Add New Data</h2>
-            <form id="data-form">
-                <input type="text" id="exercise" placeholder="Exercise" required>
-                <input type="number" id="calories" placeholder="Calories Burned" required>
-                <input type="date" id="date" required>
-                <button type="submit">Add Data</button>
-            </form>
-        </section>
-    </main>
-    <script src="js/app.js"></script>
+<div class="app">
+
+<!-- ── Sidebar ─────────────────────────────────────────── -->
+<aside class="sidebar" id="sidebar">
+  <div class="logo"><div class="logo-mark"></div><span class="logo-word">vitals</span></div>
+  <nav class="nav" id="nav">
+    <button class="nav-a active" data-p="dashboard">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      <span class="nav-txt">Dashboard</span>
+    </button>
+    <button class="nav-a" data-p="log">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>
+      <span class="nav-txt">Log Today</span>
+    </button>
+    <button class="nav-a" data-p="meals">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+      <span class="nav-txt">Meals</span>
+    </button>
+    <button class="nav-a" data-p="workout">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 4v16M18 4v16M3 8h4M17 8h4M3 16h4M17 16h4"/></svg>
+      <span class="nav-txt">Workout</span>
+    </button>
+    <button class="nav-a" data-p="cycle">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+      <span class="nav-txt">Cycle</span>
+    </button>
+    <button class="nav-a" data-p="trends">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <span class="nav-txt">Trends</span>
+    </button>
+    <button class="nav-a ai-link" data-p="assistant">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2a7 7 0 0 1 7 7c0 3-1.5 5-3.5 6.5V17a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-1.5C6.5 14 5 12 5 9a7 7 0 0 1 7-7z"/><path d="M10 21h4"/></svg>
+      <span class="nav-txt">AI Assistant</span>
+      <span class="ai-badge">AI</span>
+    </button>
+  </nav>
+  <div class="sidebar-date" id="sidebar-date"></div>
+</aside>
+
+<!-- ── Main ──────────────────────────────────────────────── -->
+<main class="main">
+
+<!-- DASHBOARD -->
+<section class="page active" id="page-dashboard">
+  <div class="ph">
+    <div><h1 class="pt" id="greeting">Good morning ✦</h1><p class="ps" id="dash-date"></p></div>
+    <div class="ai-chip" id="insight-chip" data-action="nav" data-target="assistant">
+      <div class="chip-pulse"></div><span class="chip-txt" id="chip-txt">Loading insight…</span>
+    </div>
+  </div>
+  <div class="kpi-strip" id="kpi-strip"></div>
+  <div class="g2" style="margin-bottom:12px">
+    <div class="card span2">
+      <div class="card-title">This week at a glance</div>
+      <div class="chart-box" style="height:195px"><canvas id="db-week"></canvas></div>
+    </div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="card-title">Mood this week</div>
+      <div class="chart-box" style="height:155px"><canvas id="db-mood"></canvas></div>
+    </div>
+    <div class="card" id="cycle-snap-card">
+      <div class="card-title">Cycle snapshot</div>
+      <div id="cycle-snap"></div>
+    </div>
+  </div>
+</section>
+
+<!-- LOG TODAY -->
+<section class="page" id="page-log">
+  <div class="ph"><div><h1 class="pt">Log Today</h1><p class="ps" id="log-date-lbl"></p></div></div>
+  <div class="g-auto">
+
+    <div class="card">
+      <div class="card-title"><span class="ct-dot" style="background:var(--green)"></span>Sleep<span class="saved-tag" id="sv-sleep"></span></div>
+      <div class="quick-row" id="sleep-pills"></div>
+      <div class="form-row">
+        <div class="field"><label>Hours (or tap above)</label><input type="number" id="sleep-inp" min="0" max="24" step="0.5" placeholder="e.g. 7.5"></div>
+        <div class="field"><label>Quality</label>
+          <select id="sleep-q"><option value="">Select…</option><option value="3">Poor</option><option value="5">Fair</option><option value="8">Good</option><option value="10">Excellent</option></select>
+        </div>
+      </div>
+      <button class="btn" data-action="log-sleep">Save sleep</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="ct-dot" style="background:var(--blue)"></span>Water</div>
+      <div class="water-dots" id="water-dots"></div>
+      <div class="water-label" id="water-lbl">0 / 8 glasses</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="ct-dot" style="background:#9B72CF"></span>Mood<span class="saved-tag" id="sv-mood"></span></div>
+      <div class="mood-row" id="mood-btns">
+        <button class="mb" data-v="1" data-c="#E24B4A"><span class="emoji">😔</span><span class="lbl">Very low</span></button>
+        <button class="mb" data-v="3" data-c="#EF9F27"><span class="emoji">😕</span><span class="lbl">Low</span></button>
+        <button class="mb" data-v="5" data-c="#FAC775"><span class="emoji">😐</span><span class="lbl">Neutral</span></button>
+        <button class="mb" data-v="7" data-c="#97C459"><span class="emoji">🙂</span><span class="lbl">Good</span></button>
+        <button class="mb" data-v="9" data-c="#25795A"><span class="emoji">😄</span><span class="lbl">Great</span></button>
+      </div>
+      <button class="btn" data-action="log-mood">Save mood</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="ct-dot" style="background:var(--amber)"></span>Exercise<span class="saved-tag" id="sv-ex"></span></div>
+      <div class="quick-row" id="ex-pills"></div>
+      <div class="form-row">
+        <div class="field"><label>Activity</label>
+          <select id="ex-type"><option>Running</option><option>Walking</option><option>Cycling</option><option>Swimming</option><option>Yoga</option><option>Gym</option><option>Other</option></select>
+        </div>
+        <div class="field"><label>Minutes</label><input type="number" id="ex-min" min="0" max="300" placeholder="30"></div>
+      </div>
+      <button class="btn" data-action="log-ex">Save exercise</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="ct-dot" style="background:var(--pink)"></span>Weight<span class="saved-tag" id="sv-wt"></span></div>
+      <div class="form-row">
+        <div class="field"><label>Weight (kg)</label><input type="number" id="wt-inp" min="30" max="300" step="0.1" placeholder="62.5"></div>
+      </div>
+      <button class="btn" data-action="log-weight">Save weight</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="ct-dot" style="background:var(--ink3)"></span>Notes<span class="saved-tag" id="sv-notes"></span></div>
+      <textarea id="notes-inp" placeholder="How are you feeling? Any symptoms or observations…"></textarea>
+      <button class="btn" style="margin-top:8px" data-action="log-notes">Save notes</button>
+    </div>
+
+  </div>
+</section>
+
+<!-- MEALS -->
+<section class="page" id="page-meals">
+  <div class="ph"><div><h1 class="pt">Meals & Calories</h1><p class="ps">AI-powered nutrition lookup</p></div></div>
+  <div class="meals-wrap">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="card">
+        <div class="card-title">Calorie goal</div>
+        <div class="form-row" style="align-items:flex-end">
+          <div class="field"><label>Daily target (kcal)</label><input type="number" id="goal-inp" min="500" max="6000" step="50"></div>
+          <button class="btn" data-action="set-goal">Set</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Add a meal<span class="ct-badge">✦ AI search</span></div>
+        <div class="mtype-row" id="mtype-row">
+          <button class="mt on" data-t="Breakfast">Breakfast</button>
+          <button class="mt" data-t="Lunch">Lunch</button>
+          <button class="mt" data-t="Dinner">Dinner</button>
+          <button class="mt" data-t="Snack">Snack</button>
+        </div>
+        <div class="ai-search-row">
+          <input type="text" id="food-inp" placeholder="Type any food — 'dal chawal', 'oats', 'banana'…">
+          <button class="btn btn-ai" id="search-btn" data-action="search-food">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>Search
+          </button>
+        </div>
+        <div id="food-results"></div>
+        <div class="manual-toggle" data-action="toggle-manual">+ Enter manually instead</div>
+        <div id="manual-form" style="display:none;margin-top:10px">
+          <div class="form-row"><div class="field" style="flex:2"><label>Food name</label><input type="text" id="m-name" placeholder="e.g. Masala dosa"></div></div>
+          <div class="form-row">
+            <div class="field"><label>Calories</label><input type="number" id="m-cals" placeholder="kcal"></div>
+            <div class="field"><label>Protein (g)</label><input type="number" id="m-prot" placeholder="g"></div>
+            <div class="field"><label>Carbs (g)</label><input type="number" id="m-carbs" placeholder="g"></div>
+            <div class="field"><label>Fat (g)</label><input type="number" id="m-fat" placeholder="g"></div>
+          </div>
+          <button class="btn" data-action="add-manual">Add meal</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Today's intake</div>
+      <div class="cal-kpis" id="cal-kpis"></div>
+      <div class="cal-bar-track"><div class="cal-bar-fill" id="cal-bar"></div></div>
+      <div class="cal-bar-lbl" id="cal-bar-lbl"></div>
+      <div style="height:130px;margin:8px 0"><canvas id="macro-chart"></canvas></div>
+      <div id="meal-log"></div>
+    </div>
+  </div>
+</section>
+
+<!-- WORKOUT -->
+<section class="page" id="page-workout">
+  <div class="ph"><div><h1 class="pt">Today's Workout</h1><p class="ps">Tailored to your cycle phase</p></div></div>
+  <div id="workout-content"></div>
+</section>
+
+<!-- CYCLE -->
+<section class="page" id="page-cycle">
+  <div class="ph"><div><h1 class="pt">Cycle Tracker</h1><p class="ps">Track and predict your menstrual cycle</p></div></div>
+  <div class="g2" style="margin-bottom:12px">
+    <div class="card">
+      <div class="card-title">Settings</div>
+      <div class="form-row">
+        <div class="field"><label>Last period start date</label><input type="date" id="cyc-start"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Period length (days)</label><input type="number" id="cyc-per-len" min="2" max="10" value="5"></div>
+        <div class="field"><label>Cycle length (days)</label><input type="number" id="cyc-len" min="18" max="50" value="28"></div>
+      </div>
+      <button class="btn" data-action="save-cycle">Save cycle</button>
+      <div class="cyc-status" id="cyc-status">Enter your last period start date above.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Phase guide</div>
+      <div id="phase-guide" style="font-size:13px;color:var(--ink2);line-height:1.7">Set up your cycle to see phase information here.</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Cycle calendar</div>
+    <div class="cyc-labels" id="cyc-day-labels"></div>
+    <div class="cyc-grid" id="cyc-grid"></div>
+    <div class="cyc-legend">
+      <span class="cl-item"><i class="cl-dot" style="background:#FAEEF1;border-color:#F0BCC8"></i>Period</span>
+      <span class="cl-item"><i class="cl-dot" style="background:#E6F3EE;border-color:#A8D9BB"></i>Fertile window</span>
+      <span class="cl-item"><i class="cl-dot" style="background:var(--amber-l);border-color:#F0C879"></i>Ovulation</span>
+      <span class="cl-item"><i class="cl-dot" style="outline:2px solid var(--blue);border-radius:50%;width:10px;height:10px;background:transparent"></i>Today</span>
+    </div>
+  </div>
+</section>
+
+<!-- TRENDS -->
+<section class="page" id="page-trends">
+  <div class="ph"><div><h1 class="pt">Trends</h1><p class="ps">Last 30 days</p></div></div>
+  <div class="trends-grid">
+    <div class="card"><div class="card-title">Sleep (hours)</div><div class="chart-box" style="height:175px"><canvas id="t-sleep"></canvas></div></div>
+    <div class="card"><div class="card-title">Water (glasses)</div><div class="chart-box" style="height:175px"><canvas id="t-water"></canvas></div></div>
+    <div class="card"><div class="card-title">Exercise (min)</div><div class="chart-box" style="height:175px"><canvas id="t-ex"></canvas></div></div>
+    <div class="card"><div class="card-title">Mood</div><div class="chart-box" style="height:175px"><canvas id="t-mood"></canvas></div></div>
+    <div class="card"><div class="card-title">Calories</div><div class="chart-box" style="height:175px"><canvas id="t-cals"></canvas></div></div>
+    <div class="card"><div class="card-title">Weight (kg)</div><div class="chart-box" style="height:175px"><canvas id="t-wt"></canvas></div></div>
+  </div>
+</section>
+
+<!-- AI ASSISTANT -->
+<section class="page" id="page-assistant">
+  <div class="ph"><div><h1 class="pt">AI Assistant</h1><p class="ps">Ask anything about your health, diet or cycle</p></div></div>
+  <div class="ai-wrap">
+    <div class="ai-sugs" id="ai-sugs"></div>
+    <div class="chat-win" id="chat-win"></div>
+    <div class="chat-inp-row">
+      <input type="text" id="chat-inp" placeholder="Ask me anything…">
+      <button class="btn-send" data-action="send-chat">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+  </div>
+</section>
+
+</main>
+</div>
+<div class="toast" id="toast"></div>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>
