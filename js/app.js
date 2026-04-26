@@ -160,31 +160,42 @@ function renderDashboard() {
   document.getElementById('dash-cals').innerText = todayLog?.cals || '0';
   document.getElementById('dash-weight').innerText = todayLog?.weight || '--';
 
+  const dashOpt = {
+    responsive: true,
+    scales: {
+      x: { grid: { display: false }, ticks: { color: '#8884d8' } },
+      y: { grid: { color: '#EFEBFD' }, ticks: { color: '#8884d8', beginAtZero: true } }
+    },
+    plugins: { legend: { display: false } }
+  };
+
   // Glance Chart
   safeChart('glanceChart', {
     type: 'bar',
     data: {
       labels: ['6d ago', '5d ago', '4d ago', '3d ago', '2d ago', 'Yest', 'Today'],
       datasets: [
-        { label: 'Sleep (h)', data: sleeps, backgroundColor: 'var(--green)' },
-        { label: 'Water (gl)', data: waters, backgroundColor: 'var(--blue)' },
-        { label: 'Exercise (m/6)', data: exercises.map(e => e ? e/6 : 0), backgroundColor: 'var(--purple)' }
+        { label: 'Sleep (h)', data: sleeps, backgroundColor: '#82ca9d', borderRadius: 4 },
+        { label: 'Water (gl)', data: waters, backgroundColor: '#8884d8', borderRadius: 4 },
+        { label: 'Exercise (m/6)', data: exercises.map(e => e ? e/6 : 0), backgroundColor: '#c5b4e3', borderRadius: 4 }
       ]
     },
-    options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    options: dashOpt
   });
 
   // Mood Dash Chart
+  const moodDashOpt = JSON.parse(JSON.stringify(dashOpt));
+  moodDashOpt.scales.y.max = 5; // Mood is 1-5
   safeChart('moodDashChart', {
     type: 'line',
     data: {
       labels: ['6d ago', '5d ago', '4d ago', '3d ago', '2d ago', 'Yest', 'Today'],
       datasets: [{
         label: 'Mood', data: moods,
-        borderColor: 'var(--pink)', backgroundColor: 'var(--pink-l)', fill: true, tension: 0.3, spanGaps: true
+        borderColor: '#f4a261', backgroundColor: 'rgba(244, 162, 97, 0.2)', fill: true, tension: 0.3, spanGaps: true
       }]
     },
-    options: { responsive: true, scales: { y: { min: 0, max: 10 } }, plugins: { legend: { display: false } } }
+    options: moodDashOpt
   });
 
   // Cycle Dash
@@ -484,7 +495,7 @@ function renderCycle() {
       let out = '';
       if (i === cd.day) out = 'border: 2px solid var(--blue);';
 
-      g.innerHTML += `<div style="aspect-ratio: 1; border-radius: 50%; background: ${bg}; color: ${col}; display: flex; align-items:center; justify-content:center; font-size:14px; font-weight:bold; ${out}">${i}</div>`;
+      g.innerHTML += `<div style="aspect-ratio: 1; border-radius: 50%; background: ${bg}; color: ${col}; display: flex; align-items:center; justify-content:center; font-size:12px; font-weight:bold; ${out}">${i}</div>`;
     }
   }
 }
@@ -587,14 +598,27 @@ function renderTrends() {
   const dC = keys.map(k => state.logs[k]?.cals);
   const dWt = keys.map(k => state.logs[k]?.weight);
 
-  const opt = { responsive: true, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } } } };
+  const opt = {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: {
+        grid: { display: false },
+        ticks: { color: '#8884d8' }
+      },
+      y: {
+        grid: { color: '#EFEBFD' },
+        ticks: { color: '#8884d8' }
+      }
+    }
+  };
 
-  safeChart('tr-sleep', { type: 'line', data: { labels: lbls, datasets: [{ data: dS, borderColor: 'var(--green)', spanGaps: true }] }, options: opt });
-  safeChart('tr-water', { type: 'bar', data: { labels: lbls, datasets: [{ data: dW, backgroundColor: 'var(--blue)' }] }, options: opt });
-  safeChart('tr-exercise', { type: 'bar', data: { labels: lbls, datasets: [{ data: dE, backgroundColor: 'var(--purple)' }] }, options: opt });
-  safeChart('tr-mood', { type: 'line', data: { labels: lbls, datasets: [{ data: dM, borderColor: 'var(--pink)', spanGaps: true }] }, options: opt });
-  safeChart('tr-cals', { type: 'bar', data: { labels: lbls, datasets: [{ data: dC, backgroundColor: 'var(--amber)' }] }, options: opt });
-  safeChart('tr-weight', { type: 'line', data: { labels: lbls, datasets: [{ data: dWt, borderColor: 'var(--ink2)', spanGaps: true }] }, options: opt });
+  safeChart('tr-sleep', { type: 'line', data: { labels: lbls, datasets: [{ data: dS, borderColor: '#82ca9d', backgroundColor: 'rgba(130, 202, 157, 0.2)', fill: true, spanGaps: true, tension: 0.3 }] }, options: opt });
+  safeChart('tr-water', { type: 'bar', data: { labels: lbls, datasets: [{ data: dW, backgroundColor: '#8884d8', borderRadius: 4 }] }, options: opt });
+  safeChart('tr-exercise', { type: 'bar', data: { labels: lbls, datasets: [{ data: dE, backgroundColor: '#c5b4e3', borderRadius: 4 }] }, options: opt });
+  safeChart('tr-mood', { type: 'line', data: { labels: lbls, datasets: [{ data: dM, borderColor: '#f4a261', backgroundColor: 'rgba(244, 162, 97, 0.2)', fill: true, spanGaps: true, tension: 0.3 }] }, options: opt });
+  safeChart('tr-cals', { type: 'bar', data: { labels: lbls, datasets: [{ data: dC, backgroundColor: '#ffc658', borderRadius: 4 }] }, options: opt });
+  safeChart('tr-weight', { type: 'line', data: { labels: lbls, datasets: [{ data: dWt, borderColor: '#ff9f43', backgroundColor: 'rgba(255, 159, 67, 0.2)', fill: true, spanGaps: true, tension: 0.3 }] }, options: opt });
 }
 
 
@@ -661,10 +685,52 @@ const localFoodDB = {
   "chicken": [{ name: "Chicken Breast (cooked)", unit: "grams", qty: 100, cals: 165, protein: 31, carbs: 0, fat: 3 }],
   "egg": [{ name: "Boiled Egg", unit: "large egg(s)", qty: 1, cals: 78, protein: 6, carbs: 1, fat: 5 }],
   "poha": [{ name: "Poha", unit: "bowl", qty: 1, cals: 250, protein: 5, carbs: 40, fat: 8 }],
-  "paneer": [{ name: "Paneer", unit: "grams", qty: 100, cals: 265, protein: 11, carbs: 1, fat: 20 }]
+  "paneer": [{ name: "Paneer", unit: "grams", qty: 100, cals: 265, protein: 11, carbs: 1, fat: 20 }],
+  "paneer butter masala": [{ name: "Paneer Butter Masala", unit: "bowl", qty: 1, cals: 350, protein: 12, carbs: 15, fat: 28 }],
+  "dal": [{ name: "Yellow Dal", unit: "bowl", qty: 1, cals: 180, protein: 10, carbs: 30, fat: 2 }],
+  "roti": [{ name: "Roti / Chapati", unit: "piece", qty: 1, cals: 120, protein: 3, carbs: 22, fat: 2 }],
+  "apple": [{ name: "Apple", unit: "medium", qty: 1, cals: 95, protein: 0, carbs: 25, fat: 0 }],
+  "banana": [{ name: "Banana", unit: "medium", qty: 1, cals: 105, protein: 1, carbs: 27, fat: 0 }],
+  "oats": [{ name: "Oatmeal", unit: "cup", qty: 1, cals: 150, protein: 5, carbs: 27, fat: 3 }]
 };
 
-async function searchFood() {
+document.getElementById('ai-food-search').addEventListener('input', function(e) {
+  const query = e.target.value.toLowerCase().trim();
+  const box = document.getElementById('food-autocomplete');
+
+  if(!query) {
+    box.style.display = 'none';
+    return;
+  }
+
+  const matches = Object.keys(localFoodDB).filter(k => k.includes(query) || localFoodDB[k][0].name.toLowerCase().includes(query));
+
+  if(matches.length > 0) {
+    box.innerHTML = matches.map(m => {
+      const f = localFoodDB[m][0];
+      return `<div style="padding:10px 15px; cursor:pointer; border-bottom:1px solid var(--surface2); font-size:14px;" onmousedown="selectFoodAutocomplete('${m}')">
+        <div style="font-weight:600;">${f.name}</div>
+        <div style="font-size:12px; color:var(--ink2);">Per ${f.qty} ${f.unit}: ${f.cals}kcal</div>
+      </div>`;
+    }).join('');
+    box.style.display = 'block';
+  } else {
+    box.style.display = 'none';
+  }
+});
+
+document.getElementById('ai-food-search').addEventListener('blur', () => {
+  setTimeout(() => document.getElementById('food-autocomplete').style.display = 'none', 100);
+});
+
+function selectFoodAutocomplete(key) {
+  const inp = document.getElementById('ai-food-search');
+  inp.value = localFoodDB[key][0].name;
+  document.getElementById('food-autocomplete').style.display = 'none';
+  searchFood(key); // Trigger search with exact key
+}
+
+async function searchFood(exactKey = null) {
   const inp = document.getElementById('ai-food-search');
   const resDiv = document.getElementById('ai-food-results');
   const query = inp.value.toLowerCase().trim();
@@ -676,34 +742,34 @@ async function searchFood() {
 
   let data = [];
 
-  try {
-    // Attempt AI search
-    const txt = await callAI([{role: 'user', content: `You are a nutrition database. For the food '${query}', return ONLY a JSON array of 1-3 serving options. Format: [{"name":"...","unit":"cup/ml/grams/piece","qty":1,"cals":N,"protein":N,"carbs":N,"fat":N}]. Ensure 'qty' is a number.`}]);
-
-    // Extract JSON from response
-    const jsonStr = txt.substring(txt.indexOf('['), txt.lastIndexOf(']') + 1);
-    data = JSON.parse(jsonStr);
-  } catch(e) {
-    console.warn("AI search failed, falling back to local dictionary.");
-    // Fallback local search
-    const exactMatch = localFoodDB[query];
-    if (exactMatch) {
-      data = exactMatch;
+  // Always prefer local exact match/dropdown selection over AI to prevent repetition/API errors
+  if (exactKey && localFoodDB[exactKey]) {
+    data = localFoodDB[exactKey];
+  } else if (localFoodDB[query]) {
+    data = localFoodDB[query];
+  } else {
+    // Fallback to searching partial matches in localDB
+    const matches = Object.keys(localFoodDB).filter(k => query.includes(k) || k.includes(query));
+    if (matches.length > 0) {
+      data = localFoodDB[matches[0]];
     } else {
-      // Find partial matches
-      const matches = Object.keys(localFoodDB).filter(k => query.includes(k) || k.includes(query));
-      if (matches.length > 0) {
-        data = localFoodDB[matches[0]];
-      } else {
-        // Generic fallback if nothing matches
+      try {
+        // Attempt AI search
+        const txt = await callAI([{role: 'user', content: `You are a nutrition database. For the food '${query}', return ONLY a JSON array of 1-3 serving options. Format: [{"name":"...","unit":"cup/ml/grams/piece","qty":1,"cals":N,"protein":N,"carbs":N,"fat":N}]. Ensure 'qty' is a number.`}]);
+
+        // Extract JSON from response
+        const jsonStr = txt.substring(txt.indexOf('['), txt.lastIndexOf(']') + 1);
+        data = JSON.parse(jsonStr);
+      } catch(e) {
+        console.warn("AI search failed, generic fallback used.");
         data = [{ name: query, unit: "serving(s)", qty: 1, cals: 200, protein: 5, carbs: 20, fat: 10 }];
         showToast("Using estimated values.");
       }
     }
-  } finally {
-    btn.innerText = 'Search';
-    btn.disabled = false;
   }
+
+  btn.innerText = 'Search';
+  btn.disabled = false;
 
   resDiv.innerHTML = '';
   data.forEach((f, index) => {

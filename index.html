@@ -232,9 +232,10 @@
               <div class="pill" data-type="Snack">Snack</div>
             </div>
 
-            <div style="display:flex; gap:10px; margin-bottom: 15px;">
-              <input type="text" id="ai-food-search" placeholder="Search food with AI...">
+            <div style="display:flex; gap:10px; margin-bottom: 15px; position:relative;">
+              <input type="text" id="ai-food-search" placeholder="Search food..." autocomplete="off">
               <button class="ai-btn" onclick="searchFood()">Search</button>
+              <div id="food-autocomplete" style="display:none; position:absolute; top:100%; left:0; width:100%; background:var(--surface); border:1px solid var(--surface2); border-radius:8px; z-index:10; max-height:200px; overflow-y:auto; box-shadow:0 4px 15px rgba(0,0,0,0.05);"></div>
             </div>
             <div id="ai-food-results"></div>
 
@@ -334,7 +335,7 @@
 
       <div class="card">
         <h2>Cycle Calendar (Current Cycle)</h2>
-        <div id="cycle-cal-grid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-top: 20px;">
+        <div id="cycle-cal-grid" style="display: grid; grid-template-columns: repeat(7, 30px); gap: 6px; margin-top: 20px;">
           <!-- JS populates circles -->
         </div>
         <div style="display: flex; gap: 15px; margin-top: 20px; font-size: 13px; color: var(--ink2);">
