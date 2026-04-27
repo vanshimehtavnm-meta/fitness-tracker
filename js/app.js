@@ -101,13 +101,18 @@ function logMood() {
   if(!selMood) return toast('Pick a mood first');
   getLog(todayStr()).mood=selMood; save(); confirm('sv-mood'); toast('Mood saved ✓');
 }
-function logEx() {
-  const d=parseInt(document.getElementById('ex-min').value);
-  const t=document.getElementById('ex-type').value;
+function logEx(min=null, type=null, cals=null) {
+  const d=min !== null ? min : parseInt(document.getElementById('ex-min').value);
+  const t=type !== null ? type : document.getElementById('ex-type').value;
+  const c=cals !== null ? cals : parseInt(document.getElementById('ex-cals')?.value || 0);
+
   if(!d||d<0) return toast('Enter duration');
   const log=getLog(todayStr());
-  log.exercise=(log.exercise||0)+d; log.exType=t;
-  save(); confirm('sv-ex'); toast('Exercise saved ✓');
+  log.exercise=(log.exercise||0)+d;
+  log.exType=t;
+  if (c > 0) log.exCals=(log.exCals||0)+c;
+  save();
+  confirm('sv-ex'); toast('Exercise saved ✓');
 }
 function logWeight() {
   const v=parseFloat(document.getElementById('wt-inp').value);
@@ -406,26 +411,26 @@ function renderFoodResults(items) {
 // ── Workout ───────────────────────────────────────────────────
 const WORKOUTS={
   menstrual:[
-    {n:'Gentle yoga & stretching',d:'20–30 min',i:1,desc:'Restorative poses — child\'s pose, supine twists, hip openers. Rest is valid on heavy days.'},
-    {n:'Slow walking',d:'20–30 min',i:1,desc:'Light movement eases cramps and lifts mood without taxing your body. Keep pace comfortable.'},
-    {n:'Breathing & meditation',d:'15 min',i:0,desc:'Diaphragmatic breathing and body-scan to ease discomfort and lower cortisol.'},
+    {n:'Gentle yoga & stretching',d:'20–30 min',i:1,min:25,cals:80,desc:'Restorative poses — child\'s pose, supine twists, hip openers. Rest is valid on heavy days.'},
+    {n:'Slow walking',d:'20–30 min',i:1,min:25,cals:100,desc:'Light movement eases cramps and lifts mood without taxing your body. Keep pace comfortable.'},
+    {n:'Breathing & meditation',d:'15 min',i:0,min:15,cals:20,desc:'Diaphragmatic breathing and body-scan to ease discomfort and lower cortisol.'},
   ],
   follicular:[
-    {n:'Cardio run or jog',d:'30–45 min',i:3,desc:'Rising estrogen means more energy and higher pain tolerance. Great for steady-state runs.'},
-    {n:'Lower body strength',d:'40–50 min',i:3,desc:'Squats, lunges, deadlifts. Estrogen supports muscle building — push for progressive overload.'},
-    {n:'HIIT or cycling',d:'25–35 min',i:4,desc:'40s on / 20s rest intervals. Your recovery is faster now — make the most of it.'},
-    {n:'Dance or Zumba',d:'30–40 min',i:3,desc:'High-motivation phase. Social cardio that feels energising, not draining.'},
+    {n:'Cardio run or jog',d:'30–45 min',i:3,min:35,cals:350,desc:'Rising estrogen means more energy and higher pain tolerance. Great for steady-state runs.'},
+    {n:'Lower body strength',d:'40–50 min',i:3,min:45,cals:250,desc:'Squats, lunges, deadlifts. Estrogen supports muscle building — push for progressive overload.'},
+    {n:'HIIT or cycling',d:'25–35 min',i:4,min:30,cals:300,desc:'40s on / 20s rest intervals. Your recovery is faster now — make the most of it.'},
+    {n:'Dance or Zumba',d:'30–40 min',i:3,min:35,cals:220,desc:'High-motivation phase. Social cardio that feels energising, not draining.'},
   ],
   ovulation:[
-    {n:'Peak performance session',d:'45–60 min',i:5,desc:'Testosterone peaks — your absolute strongest phase. Attempt personal bests in anything.'},
-    {n:'Group fitness or sport',d:'45–60 min',i:5,desc:'Energy and confidence at their highest. Team sports or boot camp will feel electric.'},
-    {n:'Upper body strength',d:'40–50 min',i:4,desc:'Bench press, rows, shoulder press, pull-ups. Build on follicular momentum.'},
+    {n:'Peak performance session',d:'45–60 min',i:5,min:50,cals:450,desc:'Testosterone peaks — your absolute strongest phase. Attempt personal bests in anything.'},
+    {n:'Group fitness or sport',d:'45–60 min',i:5,min:50,cals:400,desc:'Energy and confidence at their highest. Team sports or boot camp will feel electric.'},
+    {n:'Upper body strength',d:'40–50 min',i:4,min:45,cals:280,desc:'Bench press, rows, shoulder press, pull-ups. Build on follicular momentum.'},
   ],
   luteal:[
-    {n:'Pilates or barre',d:'30–40 min',i:2,desc:'Progesterone rises, energy dips. Low-impact movement that builds core without spiking cortisol.'},
-    {n:'Swimming',d:'30–40 min',i:2,desc:'Buoyancy reduces joint stress — perfect for pre-period heaviness. Full-body without strain.'},
-    {n:'Moderate strength',d:'35–45 min',i:3,desc:'Slightly reduce weights from ovulation peak. Focus on form over max effort.'},
-    {n:'Yin yoga',d:'30–45 min',i:1,desc:'Long-held passive stretches. Reduces PMS tension and improves sleep quality.'},
+    {n:'Pilates or barre',d:'30–40 min',i:2,min:35,cals:150,desc:'Progesterone rises, energy dips. Low-impact movement that builds core without spiking cortisol.'},
+    {n:'Swimming',d:'30–40 min',i:2,min:35,cals:250,desc:'Buoyancy reduces joint stress — perfect for pre-period heaviness. Full-body without strain.'},
+    {n:'Moderate strength',d:'35–45 min',i:3,min:40,cals:200,desc:'Slightly reduce weights from ovulation peak. Focus on form over max effort.'},
+    {n:'Yin yoga',d:'30–45 min',i:1,min:35,cals:100,desc:'Long-held passive stretches. Reduces PMS tension and improves sleep quality.'},
   ],
 };
 const PMETA={
@@ -462,7 +467,16 @@ function buildWorkout() {
 function workoutCard(w,meta) {
   let pips='';
   for(let p=0;p<5;p++) pips+=`<div class="pip${p<w.i?' '+(w.i<=2?'low':w.i<=3?'med':'hi'):''}"></div>`;
-  return `<div class="wk-card"><div class="wk-name">${w.n}</div><div class="wk-meta">${w.d} · ${ILVL[w.i]}</div><div class="wk-desc">${w.desc}</div><div class="wk-pips">${pips}</div></div>`;
+  return `<div class="wk-card">
+    <div class="wk-name">${w.n}</div>
+    <div class="wk-meta">${w.d} · ${ILVL[w.i]} · ~${w.cals || 0} kcal</div>
+    <div class="wk-desc">${w.desc}</div>
+    <div class="wk-pips">${pips}</div>
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <button class="btn" style="flex:1;background:var(--surface2);color:var(--ink2);border:1px solid var(--border);" data-action="tutorial" data-q="${w.n}">Tutorial</button>
+      <button class="btn" style="flex:1" data-action="log-sug-ex" data-name="${w.n}" data-min="${w.min || 30}" data-cals="${w.cals || 0}">Log Workout</button>
+    </div>
+  </div>`;
 }
 
 // ── Cycle ─────────────────────────────────────────────────────
@@ -682,6 +696,17 @@ document.addEventListener('click', (e) => {
         if (action === 'save-cycle') saveCycle();
         if (action === 'send-chat') sendChat();
         if (action === 'chat-sug') sendChat(el.dataset.sug);
+        if (action === 'tutorial') {
+            window.open('https://www.youtube.com/results?search_query=' + encodeURIComponent(el.dataset.q + ' workout tutorial'), '_blank');
+        }
+        if (action === 'log-sug-ex') {
+            logEx(parseInt(el.dataset.min), el.dataset.name, parseInt(el.dataset.cals));
+            el.textContent = '✓ Logged';
+            el.disabled = true;
+            el.style.background = 'var(--green)';
+            el.style.color = '#fff';
+            el.style.borderColor = 'var(--green)';
+        }
         if (action === 'quick-sleep') {
             document.querySelectorAll('#sleep-pills .pill').forEach(x=>x.classList.remove('on-green'));
             el.classList.add('on-green');
