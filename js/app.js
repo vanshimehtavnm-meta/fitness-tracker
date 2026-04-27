@@ -158,14 +158,14 @@ function buildDash() {
       {label:'Water (gl)',data:days7.map(d=>S.logs[d]?.water??null),backgroundColor:'#B5D4F4',borderRadius:4,yAxisID:'y'},
       {label:'Exercise (/6 min)',data:days7.map(d=>S.logs[d]?.exercise?+(S.logs[d].exercise/6).toFixed(1):null),backgroundColor:'#C4BFF0',borderRadius:4,yAxisID:'y'},
     ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11,family:"'DM Sans'"},color:'#A89A88',boxWidth:10,padding:12}}},scales:{x:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:11},color:'#A89A88'}},y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:11},color:'#A89A88'},min:0,max:12}}}
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11,family:"'DM Sans'"},color:'#A05C0A',boxWidth:10,padding:12}}},scales:{x:{grid:{color:'rgba(109,40,217,0.1)'},ticks:{font:{size:11},color:'#A05C0A'}},y:{grid:{color:'rgba(109,40,217,0.1)'},ticks:{font:{size:11},color:'#A05C0A'},min:0,max:12}}}
   });
 
   destroyChart('db-mood');
   dbCharts['db-mood']=new Chart(document.getElementById('db-mood'),{
     type:'line',
-    data:{labels,datasets:[{data:days7.map(d=>S.logs[d]?.mood??null),borderColor:'var(--pink)',backgroundColor:'rgba(184,66,95,.1)',fill:true,tension:0.4,pointRadius:4,pointBackgroundColor:'var(--pink)',spanGaps:true}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:11},color:'#A89A88'}},y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:11},color:'#A89A88'},min:0,max:10}}}
+    data:{labels,datasets:[{data:days7.map(d=>S.logs[d]?.mood??null),borderColor:'#B8425F',backgroundColor:'rgba(184,66,95,.1)',fill:true,tension:0.4,pointRadius:4,pointBackgroundColor:'#B8425F',spanGaps:true}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(109,40,217,0.1)'},ticks:{font:{size:11},color:'#A05C0A'}},y:{grid:{color:'rgba(109,40,217,0.1)'},ticks:{font:{size:11},color:'#A05C0A'},min:0,max:10}}}
   });
 
   // Cycle snap
@@ -571,20 +571,20 @@ function buildTrends() {
   const days=daysBack(30);
   const labels=days.map(shortLabel);
   const CO={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-    scales:{x:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:10,family:"'DM Sans'"},color:'#A89A88',maxRotation:45,autoSkip:true,maxTicksLimit:10}},
-      y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:11,family:"'DM Sans'"},color:'#A89A88'},min:0}}};
+    scales:{x:{grid:{color:'rgba(109,40,217,0.1)'},ticks:{font:{size:10,family:"'DM Sans'"},color:'#A05C0A',maxRotation:45,autoSkip:true,maxTicksLimit:10}},
+      y:{grid:{color:'rgba(109,40,217,0.1)'},ticks:{font:{size:11,family:"'DM Sans'"},color:'#A05C0A'},min:0}}};
   [
-    {id:'t-sleep',data:days.map(d=>S.logs[d]?.sleep??null),color:'var(--green)',fill:'rgba(37,121,90,.1)',type:'line'},
-    {id:'t-water',data:days.map(d=>S.logs[d]?.water??null),color:'var(--blue)',fill:'var(--blue)',type:'bar'},
+    {id:'t-sleep',data:days.map(d=>S.logs[d]?.sleep??null),color:'#25795A',fill:'rgba(37,121,90,.1)',type:'line'},
+    {id:'t-water',data:days.map(d=>S.logs[d]?.water??null),color:'#2558A0',fill:'#2558A0',type:'bar'},
     {id:'t-ex',data:days.map(d=>S.logs[d]?.exercise??null),color:'#9B72CF',fill:'#9B72CF',type:'bar'},
-    {id:'t-mood',data:days.map(d=>S.logs[d]?.mood??null),color:'var(--pink)',fill:'rgba(184,66,95,.1)',type:'line'},
-    {id:'t-cals',data:days.map(d=>S.logs[d]?.meals?.reduce((a,m)=>a+m.cals,0)??null),color:'var(--amber)',fill:'var(--amber)',type:'bar'},
-    {id:'t-wt',data:days.map(d=>S.logs[d]?.weight??null),color:'var(--ink2)',fill:'rgba(107,94,80,.1)',type:'line'},
+    {id:'t-mood',data:days.map(d=>S.logs[d]?.mood??null),color:'#B8425F',fill:'rgba(184,66,95,.1)',type:'line'},
+    {id:'t-cals',data:days.map(d=>S.logs[d]?.meals?.reduce((a,m)=>a+m.cals,0)??null),color:'#A05C0A',fill:'#A05C0A',type:'bar'},
+    {id:'t-wt',data:days.map(d=>S.logs[d]?.weight??null),color:'#FF7F50',fill:'rgba(255,127,80,.1)',type:'line'},
   ].forEach(({id,data,color,fill,type})=>{
     destroyChart(id);
     dbCharts[id]=new Chart(document.getElementById(id),{
       type,
-      data:{labels,datasets:[{data,borderColor:color,backgroundColor:type==='line'?fill:color+'BB',fill:type==='line',tension:0.35,pointRadius:2,pointBackgroundColor:color,borderRadius:4,spanGaps:true}]},
+      data:{labels,datasets:[{data,borderColor:color,backgroundColor:type==='line'?fill:color,fill:type==='line',tension:0.35,pointRadius:2,pointBackgroundColor:color,borderRadius:4,spanGaps:true}]},
       options:CO
     });
   });
