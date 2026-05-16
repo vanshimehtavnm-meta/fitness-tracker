@@ -7,7 +7,6 @@ function nav(p) {
   if(p==='trends') buildTrends();
   if(p==='workout') buildWorkout();
   if(p==='meals') renderMeals();
-  if(p==='assistant') initChat();
   if(p==='cycle') renderCycle();
 }
 document.querySelectorAll('.nav-a').forEach(el=>el.addEventListener('click',(e)=>nav(e.currentTarget.dataset.p)));
@@ -73,6 +72,11 @@ function renderWater() {
     container.appendChild(d);
   }
   document.getElementById('water-lbl').textContent=(w||0)+' / 8 glasses';
+  const fluid = document.getElementById('water-fluid');
+  if(fluid) {
+    const pct = Math.min(100, Math.round((w / 8) * 100));
+    fluid.style.height = pct + '%';
+  }
 }
 
 // ── Mood buttons ──────────────────────────────────────────────
@@ -124,67 +128,62 @@ function logNotes() {
 let dbCharts={};
 function destroyChart(id) { if(dbCharts[id]){dbCharts[id].destroy();delete dbCharts[id];} }
 
-
 function buildDash() {
-  const log = getLog(todayStr());
-  const stepsGoal = 10000;
-  const activeGoal = 60;
+  const days7=daysBack(7);
+  const log=getLog(todayStr());
+  const sleeps=daysBack(14).map(d=>S.logs[d]?.sleep??null);
+  const waters=daysBack(14).map(d=>S.logs[d]?.water??null);
+  const exs=daysBack(14).map(d=>S.logs[d]?.exercise??null);
+  const totCals=(log.meals||[]).reduce((a,m)=>a+m.cals,0);
+  const moodMap={1:'Very low',3:'Low',5:'Neutral',7:'Good',9:'Great'};
+  const wts=daysBack(14).map(d=>S.logs[d]?.weight).filter(Boolean);
+  const kpis=[
+    {l:'Avg sleep',v:avg(sleeps)?avg(sleeps)+'h':'–',s:'14-day avg',c:'var(--green)'},
+    {l:'Avg water',v:avg(waters)?avg(waters)+' gl':'–',s:'glasses/day',c:'var(--blue)'},
+    {l:'Avg exercise',v:avg(exs)?avg(exs)+'m':'–',s:'min/day',c:'#9B72CF'},
+    {l:"Today's mood",v:log.mood?moodMap[log.mood]:'–',s:'logged today',c:'var(--pink)'},
+    {l:'Calories today',v:totCals>0?totCals+' kcal':'–',s:'goal: '+S.calGoal,c:'var(--amber)'},
+    {l:'Weight',v:wts.slice(-1)[0]?wts.slice(-1)[0]+'kg':'–',s:'latest entry',c:'var(--ink2)'},
+  ];
+  document.getElementById('kpi-strip').innerHTML=kpis.map(k=>`
+    <div class="kpi"><div class="kpi-l">${k.l}</div><div class="kpi-v" style="color:${k.c}">${k.v}</div><div class="kpi-s">${k.s}</div></div>`).join('');
 
-  // Fake steps for demo based on exercise, or just random
-  const steps = (log.exercise || 0) * 110 + 2000;
-  const active = log.exercise || 0;
+  const labels=days7.map(shortLabel);
+  destroyChart('db-week');
+  dbCharts['db-week']=new Chart(document.getElementById('db-week'),{
+    type:'bar',
+    data:{labels,datasets:[
+      {label:'Sleep (h)',data:days7.map(d=>S.logs[d]?.sleep??null),backgroundColor:'#A8D9BB',borderRadius:4,yAxisID:'y'},
+      {label:'Water (gl)',data:days7.map(d=>S.logs[d]?.water??null),backgroundColor:'#B5D4F4',borderRadius:4,yAxisID:'y'},
+      {label:'Exercise (/6 min)',data:days7.map(d=>S.logs[d]?.exercise?+(S.logs[d].exercise/6).toFixed(1):null),backgroundColor:'#C4BFF0',borderRadius:4,yAxisID:'y'},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11,family:"'DM Sans'"},color:'#A89A88',boxWidth:10,padding:12}}},scales:{x:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:11},color:'#A89A88'}},y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:11},color:'#A89A88'},min:0,max:12}}}
+  });
 
-  const stepPct = Math.min(100, Math.round((steps / stepsGoal) * 100));
-  const activePct = Math.min(100, Math.round((active / activeGoal) * 100));
-  const totalPct = Math.round((stepPct + activePct) / 2);
+  destroyChart('db-mood');
+  dbCharts['db-mood']=new Chart(document.getElementById('db-mood'),{
+    type:'line',
+    data:{labels,datasets:[{data:days7.map(d=>S.logs[d]?.mood??null),borderColor:'var(--pink)',backgroundColor:'rgba(184,66,95,.1)',fill:true,tension:0.4,pointRadius:4,pointBackgroundColor:'var(--pink)',spanGaps:true}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:11},color:'#A89A88'}},y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:11},color:'#A89A88'},min:0,max:10}}}
+  });
 
-  const ringSteps = document.getElementById('ring-steps');
-  if (ringSteps) {
-      const offset = 628 - (628 * stepPct / 100);
-      ringSteps.style.strokeDashoffset = offset;
-  }
-
-  const ringActive = document.getElementById('ring-active');
-  if (ringActive) {
-      const offset = 477 - (477 * activePct / 100);
-      ringActive.style.strokeDashoffset = offset;
-  }
-
-  if (document.getElementById('dash-goal-pct')) document.getElementById('dash-goal-pct').textContent = totalPct + '%';
-  if (document.getElementById('dash-steps-val')) document.getElementById('dash-steps-val').textContent = steps.toLocaleString();
-  if (document.getElementById('dash-active-val')) document.getElementById('dash-active-val').textContent = active + 'm';
-
-  // Hydration
-  const water = log.water || 0;
-  if (document.getElementById('dash-water-val')) document.getElementById('dash-water-val').innerHTML = `${water}<span class="text-xs opacity-60 font-normal ml-1">glasses</span>`;
-  const waterWave = document.getElementById('dash-water-wave');
-  if (waterWave) {
-      const waterPct = Math.min(100, Math.round((water / 8) * 100));
-      // Base height 10%, max 100%
-      const h = Math.max(10, waterPct);
-      waterWave.style.height = h + '%';
-  }
-
-  // Cycle
-  const ci = getCycleInfo();
-  if (ci) {
-      if (document.getElementById('dash-cycle-day')) document.getElementById('dash-cycle-day').textContent = 'Day ' + ci.day;
-      if (document.getElementById('dash-cycle-phase')) document.getElementById('dash-cycle-phase').textContent = ci.phase.charAt(0).toUpperCase() + ci.phase.slice(1) + ' Phase';
+  // Cycle snap
+  const ci=getCycleInfo();
+  const snapEl=document.getElementById('cycle-snap');
+  const PMETA={
+    menstrual:{label:'Menstrual phase',bg:'#FAEEF1',c:'#8B2242',note:'Energy is low. Gentle movement and rest work best.'},
+    follicular:{label:'Follicular phase',bg:'#E6F3EE',c:'var(--green)',note:'Energy rising. Great time to push harder.'},
+    ovulation:{label:'Ovulation phase',bg:'var(--amber-l)',c:'var(--amber)',note:'Peak energy and strength. Go for it!'},
+    luteal:{label:'Luteal phase',bg:'var(--blue-l)',c:'var(--blue)',note:'Energy dipping. Moderate activity is ideal.'},
+  };
+  if(ci){
+    const m=PMETA[ci.phase];
+    snapEl.innerHTML=`<div style="background:${m.bg};border-radius:var(--r-sm);padding:.8rem 1rem;margin-bottom:8px"><div style="font-family:'Lora',serif;font-size:18px;color:${m.c};letter-spacing:-.02em;margin-bottom:2px">${m.label}</div><div style="font-size:12px;color:${m.c}CC">Day ${ci.day} of cycle</div></div><div style="font-size:13px;color:var(--ink2);line-height:1.6;margin-bottom:10px">${m.note}</div><button class="btn" style="font-size:12px;padding:6px 14px" data-action="nav" data-target="workout">See today's workout →</button>`;
   } else {
-      if (document.getElementById('dash-cycle-day')) document.getElementById('dash-cycle-day').textContent = '--';
-      if (document.getElementById('dash-cycle-phase')) document.getElementById('dash-cycle-phase').textContent = 'Not Set';
+    snapEl.innerHTML=`<div style="font-size:13px;color:var(--ink3);padding:8px 0">Set up your cycle in the Cycle tab to see phase insights here.</div><button class="btn" style="font-size:12px;padding:6px 14px;margin-top:6px" data-action="nav" data-target="cycle">Set up cycle →</button>`;
   }
-
-  // Next Workout (just grab the first one for the phase or a default)
-  const phase = ci?.phase || 'follicular';
-  const w = WORKOUTS[phase] ? WORKOUTS[phase][0] : null;
-  if (w) {
-    if (document.getElementById('dash-workout-name')) document.getElementById('dash-workout-name').textContent = w.n;
-    if (document.getElementById('dash-workout-dur')) document.getElementById('dash-workout-dur').textContent = w.d;
-    if (document.getElementById('dash-workout-level')) document.getElementById('dash-workout-level').textContent = ILVL[w.i];
-  }
+  loadInsight();
 }
-
 
 // ── Daily AI insight ──────────────────────────────────────────
 async function loadInsight() {
@@ -581,85 +580,26 @@ function buildTrends() {
   });
 }
 
-// ── AI Chat ───────────────────────────────────────────────────
-let chatHistory=[];
-const SUGGESTIONS=['Analyse my sleep this week','What should I eat today?','Workout tip for my phase','How are my calories trending?','What does my mood pattern look like?'];
 
-function initChat() {
-  const sugsEl=document.getElementById('ai-sugs');
-  if(!sugsEl.innerHTML){
-    sugsEl.innerHTML=SUGGESTIONS.map(s=>`<button class="ai-sug" data-action="chat-sug" data-sug="${s}">${s}</button>`).join('');
-  }
-  if(chatHistory.length===0){
-    appendMsg('ai','Hi! I\'m your personal health assistant. I can see your logged data and help you understand patterns, suggest meals, explain your cycle, or answer health questions. What\'s on your mind?');
-  }
-}
+// ── Theme Toggle ─────────────────────────────────────────────
+(function initTheme() {
+  const saved = localStorage.getItem('vitals_theme') || 'light';
+  document.documentElement.setAttribute('data-theme', saved);
 
-function appendMsg(role,text) {
-  const win=document.getElementById('chat-win');
-  const div=document.createElement('div');
-  div.className='msg '+role;
-  div.innerHTML=`<div class="msg-av">${role==='ai'?'✦':'👤'}</div><div class="msg-bub">${text.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}</div>`;
-  win.appendChild(div);
-  win.scrollTop=win.scrollHeight;
-}
+  const btn = document.getElementById('theme-toggle');
+  if(btn) {
+    btn.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('vitals_theme', next);
 
-function addTyping() {
-  const win=document.getElementById('chat-win');
-  const div=document.createElement('div');
-  div.className='msg ai'; div.id='typing-dot';
-  div.innerHTML=`<div class="msg-av">✦</div><div class="msg-bub"><div class="typing"><span></span><span></span><span></span></div></div>`;
-  win.appendChild(div); win.scrollTop=win.scrollHeight;
-}
-function removeTyping() { document.getElementById('typing-dot')?.remove(); }
-
-function buildContext() {
-  const d14=daysBack(14);
-  const log=getLog(todayStr());
-  const ci=getCycleInfo();
-  const totCals=(log.meals||[]).reduce((a,m)=>a+m.cals,0);
-  return `User health data (use this to give specific, personalised answers):
-- Avg sleep (14 days): ${avg(d14.map(d=>S.logs[d]?.sleep??null))||'no data'}h
-- Avg water (14 days): ${avg(d14.map(d=>S.logs[d]?.water??null))||'no data'} glasses/day
-- Avg exercise (14 days): ${avg(d14.map(d=>S.logs[d]?.exercise??null))||'no data'} min/day
-- Today's calories: ${totCals} kcal (goal: ${S.calGoal} kcal)
-- Cycle phase: ${ci?ci.phase+', day '+ci.day+' of '+ci.cl:'not set up'}
-- Recent moods (14 days, scale 1–9): ${d14.map(d=>S.logs[d]?.mood??'–').join(', ')}
-- Latest weight: ${d14.map(d=>S.logs[d]?.weight).filter(Boolean).slice(-1)[0]||'not logged'} kg
-- Today's notes: ${log.notes||'none'}`;
-}
-
-async function sendChat(text) {
-  const inp=document.getElementById('chat-inp');
-  const msg=(typeof text==='string'&&text.trim())?text.trim():inp.value.trim();
-  if(!msg) return;
-  inp.value='';
-  appendMsg('user',msg);
-  chatHistory.push({role:'user',content:msg});
-  if(chatHistory.length>20) chatHistory=chatHistory.slice(-20);
-  addTyping();
-  try {
-    const r=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',max_tokens:500,
-        system:`You are a warm, knowledgeable personal health assistant inside a health tracking app. Always be specific to the user's data. Use **bold** for key numbers. Keep answers concise (3–5 sentences unless more is asked). Never diagnose.\n\n${buildContext()}`,
-        messages:chatHistory
-      })
+      // Force charts to re-render with new colors if they exist
+      if(document.querySelector('#page-dashboard.active')) buildDash();
+      if(document.querySelector('#page-trends.active')) buildTrends();
     });
-    if(!r.ok){ const e=await r.text(); throw new Error(e); }
-    const data=await r.json();
-    const reply=data.content?.find(c=>c.type==='text')?.text?.trim();
-    if(!reply) throw new Error('Empty response');
-    removeTyping();
-    appendMsg('ai',reply);
-    chatHistory.push({role:'assistant',content:reply});
-  } catch(e) {
-    removeTyping();
-    appendMsg('ai','Sorry, I couldn\'t connect right now. Make sure the app is being served locally and try again.');
-    console.error('AI error:',e);
   }
-}
+})();
 
 // ── Boot ──────────────────────────────────────────────────────
 renderWater();
@@ -685,8 +625,6 @@ document.addEventListener('click', (e) => {
         if (action === 'add-food') addMealEntry(lastSearchResults[el.dataset.index]);
         if (action === 'delete-meal') deleteMeal(el.dataset.index);
         if (action === 'save-cycle') saveCycle();
-        if (action === 'send-chat') sendChat();
-        if (action === 'chat-sug') sendChat(el.dataset.sug);
         if (action === 'quick-sleep') {
             document.querySelectorAll('#sleep-pills .pill').forEach(x=>x.classList.remove('on-green'));
             el.classList.add('on-green');
@@ -698,12 +636,6 @@ document.addEventListener('click', (e) => {
             const opt = QUICK_EX[el.dataset.idx];
             document.getElementById('ex-type').value=opt.t;
             document.getElementById('ex-min').value=opt.d;
-        }
-        if (action === 'dash-log-water') {
-            e.stopPropagation();
-            const log=getLog(todayStr());
-            log.water=(log.water||0)+1;
-            save(); renderWater(); buildDash(); toast('Water updated');
         }
         if (action === 'log-water') {
             const log=getLog(todayStr());
@@ -717,6 +649,5 @@ document.addEventListener('click', (e) => {
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
         if (e.target.id === 'food-inp') searchFood();
-        if (e.target.id === 'chat-inp') sendChat();
-    }
+        }
 });

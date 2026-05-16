@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="dark" lang="en">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,210 +8,79 @@
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <link rel="stylesheet" href="css/style.css">
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<script id="tailwind-config">
-    tailwind.config = {
-        darkMode: "class",
-        theme: {
-            extend: {
-                colors: {
-                    "primary": "#2f6a3f",
-                    "primary-pastel": "#b2f2bb",
-                    "secondary-pastel": "#a5d8ff",
-                    "tertiary-pastel": "#ffd9e2",
-                    "lavender-pastel": "#e7bbc6",
-                    "obsidian": "#090a0f",
-                    "off-white": "#f8faf4",
-                    "on-surface": "#191c19",
-                    "surface-variant": "#e1e3dd",
-                },
-                fontFamily: {
-                    "display": ["Outfit", "sans-serif"],
-                    "body": ["Plus Jakarta Sans", "sans-serif"]
-                },
-                borderRadius: {
-                    "DEFAULT": "0.5rem",
-                    "lg": "1rem",
-                    "xl": "1.5rem",
-                    "full": "9999px"
-                }
-            },
-        },
-    }
-</script>
-<script>
-    function toggleTheme() {
-        const html = document.documentElement;
-        if (html.classList.contains('dark')) {
-            html.classList.remove('dark');
-            html.classList.add('light');
-            localStorage.setItem('theme', 'light');
-        } else {
-            html.classList.remove('light');
-            html.classList.add('dark');
-            localStorage.setItem('theme', 'dark');
-        }
-    }
-    // Initialize theme
-    if (localStorage.getItem('theme') === 'light') {
-        document.documentElement.classList.remove('dark');
-        document.documentElement.classList.add('light');
-    }
-</script>
-<style>
-    body {
-        transition: background-color 0.3s ease, color 0.3s ease;
-    }
-    h1, h2, h3, h4 {
-        font-family: 'Outfit', sans-serif;
-    }
-</style>
 </head>
-<body class="bg-off-white dark:bg-obsidian text-on-surface dark:text-white font-body antialiased min-h-screen pb-24 overflow-x-hidden transition-colors duration-300">
+<body>
 <div class="app">
-<header class="sticky top-0 z-50 backdrop-blur-xl bg-white/5 dark:bg-obsidian/80 border-b border-black/5 dark:border-white/5">
-<div class="flex items-center p-4 justify-between max-w-md mx-auto">
-<div class="flex items-center gap-3">
-<div class="size-10 rounded-full border-2 border-primary-pastel overflow-hidden shadow-sm">
-<img alt="Alex" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDzqDlQ5pGS45-_yJTODff6W4x9hmSAKjMFyIjk2J5tMmsJT7WtOK0buxjdUDtJC-Qiu1EdZOlQRbrSjqdRvVdBcieQN5h-LwcphwIS4Zu38XFzlZCwL8Pz8q2XHVB4F6XPUfDwXLG54B6xFfiJMdlzTuKhsAjOie6dih0FlYW1KlqK5drIZ_wWMAMbgAvjzRsGLJJsfObHEQvDyb8vmJGLncHaTJ90zDLOec83XTLx7d0hhGLSDeTqvqSHAAIgCKimeoMZr3Vg4TQ"/>
-</div>
-<div>
-<p class="text-[10px] uppercase tracking-wider font-bold opacity-60" id="greeting">Good Morning, Alex</p>
-<h2 class="text-lg font-bold leading-none" id="dash-date">Today, Oct 24</h2>
-</div>
-</div>
-<div class="flex items-center gap-2">
-<button class="size-10 rounded-full glass-card flex items-center justify-center text-on-surface dark:text-white transition-all active:scale-90" onclick="toggleTheme()">
-<span class="material-symbols-outlined dark:hidden" data-icon="light_mode">light_mode</span>
-<span class="material-symbols-outlined hidden dark:block" data-icon="dark_mode">dark_mode</span>
-</button>
-<button class="size-10 rounded-full glass-card flex items-center justify-center text-primary dark:text-primary-pastel transition-all active:scale-90">
-<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
-</button>
-</div>
-</div>
-</header>
+
+<!-- ── Sidebar ─────────────────────────────────────────── -->
+<aside class="sidebar" id="sidebar">
+  <div class="logo"><div class="logo-mark"></div><span class="logo-word">vitals</span></div>
+  <nav class="nav" id="nav">
+    <button class="nav-a active" data-p="dashboard">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      <span class="nav-txt">Dashboard</span>
+    </button>
+    <button class="nav-a" data-p="log">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>
+      <span class="nav-txt">Log Today</span>
+    </button>
+    <button class="nav-a" data-p="meals">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+      <span class="nav-txt">Meals</span>
+    </button>
+    <button class="nav-a" data-p="workout">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 4v16M18 4v16M3 8h4M17 8h4M3 16h4M17 16h4"/></svg>
+      <span class="nav-txt">Workout</span>
+    </button>
+    <button class="nav-a" data-p="cycle">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+      <span class="nav-txt">Cycle</span>
+    </button>
+    <button class="nav-a" data-p="trends">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <span class="nav-txt">Trends</span>
+    </button>
+
+
+    <button class="nav-a" id="theme-toggle">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+      </svg>
+      <span class="nav-txt">Toggle Theme</span>
+    </button>
+  </nav>
+  <div class="sidebar-date" id="sidebar-date"></div>
+</aside>
 
 <!-- ── Main ──────────────────────────────────────────────── -->
-<main class="main px-4 py-6 space-y-8 max-w-md mx-auto">
+<main class="main">
 
 <!-- DASHBOARD -->
-
 <section class="page active" id="page-dashboard">
-  <!-- Activity Rings Section -->
-  <section class="flex flex-col items-center justify-center relative py-4">
-    <div class="relative size-60">
-      <svg class="w-full h-full -rotate-90 transform" viewbox="0 0 240 240">
-        <!-- Outer Ring: Steps (Mint Pastel) -->
-        <circle class="ring-track" cx="120" cy="120" fill="none" r="100" stroke-width="16"></circle>
-        <circle id="ring-steps" cx="120" cy="120" fill="none" r="100" stroke="#b2f2bb" stroke-dasharray="628" stroke-dashoffset="628" stroke-linecap="round" stroke-width="16" style="transition: stroke-dashoffset 1s ease-out;"></circle>
-        <!-- Inner Ring: Energy/Active (Lavender Pastel) -->
-        <circle class="ring-track" cx="120" cy="120" fill="none" r="76" stroke-width="16"></circle>
-        <circle id="ring-active" cx="120" cy="120" fill="none" r="76" stroke="#e7bbc6" stroke-dasharray="477" stroke-dashoffset="477" stroke-linecap="round" stroke-width="16" style="transition: stroke-dashoffset 1s ease-out;"></circle>
-      </svg>
-      <!-- Center Content -->
-      <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
-        <span class="material-symbols-outlined text-primary-pastel text-3xl mb-1 dark:opacity-90" data-icon="auto_awesome">auto_awesome</span>
-        <h3 class="text-3xl font-bold tracking-tight" id="dash-goal-pct">0%</h3>
-        <p class="text-[10px] opacity-60 font-bold uppercase tracking-widest mt-1">Daily Goal</p>
-      </div>
+  <div class="ph">
+    <div><h1 class="pt" id="greeting">Good morning ✦</h1><p class="ps" id="dash-date"></p></div>
+    <div class="ai-chip" id="insight-chip" data-action="nav" data-target="assistant">
+      <div class="chip-pulse"></div><span class="chip-txt" id="chip-txt">Loading insight…</span>
     </div>
-    <!-- Legend -->
-    <div class="flex gap-10 mt-8 w-full justify-center">
-      <div class="flex flex-col items-center">
-        <div class="flex items-center gap-2 mb-1">
-          <div class="size-2 rounded-full bg-primary-pastel"></div>
-          <span class="text-xs font-bold opacity-60 uppercase tracking-tighter">Steps</span>
-        </div>
-        <span class="text-xl font-bold" id="dash-steps-val">0</span>
-      </div>
-      <div class="flex flex-col items-center">
-        <div class="flex items-center gap-2 mb-1">
-          <div class="size-2 rounded-full bg-lavender-pastel"></div>
-          <span class="text-xs font-bold opacity-60 uppercase tracking-tighter">Active</span>
-        </div>
-        <span class="text-xl font-bold" id="dash-active-val">0m</span>
-      </div>
+  </div>
+  <div class="kpi-strip" id="kpi-strip"></div>
+  <div class="g2" style="margin-bottom:12px">
+    <div class="card span2">
+      <div class="card-title">This week at a glance</div>
+      <div class="chart-box" style="height:195px"><canvas id="db-week"></canvas></div>
     </div>
-  </section>
-
-  <!-- Widgets Grid -->
-  <section class="grid grid-cols-2 gap-4">
-    <!-- Hydration Widget (Pastel Blue) -->
-    <button class="glass-card rounded-xl h-44 p-4 flex flex-col relative overflow-hidden group text-left transition-all hover:scale-[1.02] active:scale-[0.98]" data-action="nav" data-target="log">
-      <div class="absolute bottom-0 left-0 w-[200%] h-1/3 opacity-30 wave-anim" id="dash-water-wave">
-        <svg class="w-full h-full fill-secondary-pastel" preserveaspectratio="none" viewbox="0 0 800 100">
-          <path d="M0,50 Q100,0 200,50 T400,50 T600,50 T800,50 L800,100 L0,100 Z"></path>
-        </svg>
-      </div>
-      <div class="relative z-10 flex justify-between items-start w-full">
-        <div class="flex items-center gap-2 text-secondary-pastel dark:text-secondary-pastel">
-          <span class="material-symbols-outlined text-lg" data-icon="water_drop" data-weight="fill">water_drop</span>
-          <span class="text-xs font-bold uppercase tracking-tight">Water</span>
-        </div>
-        <div class="size-7 rounded-full bg-secondary-pastel/20 flex items-center justify-center text-secondary-pastel" data-action="dash-log-water">
-          <span class="material-symbols-outlined text-sm" data-icon="add" style="pointer-events: none;">add</span>
-        </div>
-      </div>
-      <div class="relative z-10 mt-auto">
-        <h4 class="text-2xl font-bold mb-1" id="dash-water-val">0<span class="text-xs opacity-60 font-normal ml-1">glasses</span></h4>
-        <p class="text-[10px] opacity-60 font-bold uppercase">Goal: 8</p>
-      </div>
-    </button>
-
-    <!-- Cycle Status Widget (Pastel Pink) -->
-    <button class="glass-card rounded-xl h-44 p-4 flex flex-col relative overflow-hidden group text-left transition-all hover:scale-[1.02] active:scale-[0.98]" data-action="nav" data-target="cycle" id="dash-cycle-widget">
-      <div class="absolute -right-4 -top-4 w-20 h-20 bg-tertiary-pastel/20 rounded-full blur-2xl"></div>
-      <div class="relative z-10 flex justify-between items-start w-full">
-        <div class="flex items-center gap-2 text-tertiary-pastel">
-          <span class="material-symbols-outlined text-lg" data-icon="all_inclusive">all_inclusive</span>
-          <span class="text-xs font-bold uppercase tracking-tight">Cycle</span>
-        </div>
-        <span class="material-symbols-outlined text-tertiary-pastel" data-icon="bolt">bolt</span>
-      </div>
-      <div class="relative z-10 mt-auto">
-        <h4 class="text-2xl font-bold mb-1" id="dash-cycle-day">--</h4>
-        <p class="text-[10px] text-tertiary-pastel font-bold uppercase tracking-tight" id="dash-cycle-phase">--</p>
-      </div>
-    </button>
-  </section>
-
-  <!-- Workout Banner -->
-  <section class="mt-8">
-    <div class="flex justify-between items-end mb-4 px-1">
-      <h3 class="text-lg font-bold">Up Next</h3>
-      <span class="text-xs font-bold text-primary-pastel uppercase tracking-wider cursor-pointer" data-action="nav" data-target="workout">View Plan</span>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="card-title">Mood this week</div>
+      <div class="chart-box" style="height:155px"><canvas id="db-mood"></canvas></div>
     </div>
-    <button class="w-full glass-card rounded-xl p-2 flex items-center gap-4 transition-all hover:scale-[1.01] active:scale-[0.98]" data-action="nav" data-target="workout">
-      <div class="size-20 rounded-lg bg-obsidian/20 overflow-hidden shrink-0 relative">
-        <img alt="Yoga" class="absolute inset-0 w-full h-full object-cover opacity-60 dark:opacity-40 grayscale" src="https://lh3.googleusercontent.com/aida-public/AB6AXuACkIYADPnLUcN6iHR-rVUPsmTmUiEy_mbvNhuJQnYwy7BIkXNCZS2beZfO4kRU2jxKwxIB5CwMw6ZQdoIO4CYosAPKv62-MRKviqJDSuZa3hm1qZ1XpMlcX6zXN6vco-a0trOcquUm85uMcNsS2iXtohShoPKIAIdmmmLNwzX_TS20av0H6m3vD5cTMNcxaqvgWqh4NhadXbICFTBs7PPEMez-SorMmk4nxxpJoJAI5FjuRH0N7wgOiFVelJup-zySPD0S5Kb3hjE"/>
-        <div class="absolute inset-0 bg-gradient-to-tr from-lavender-pastel/30 to-transparent"></div>
-        <div class="absolute inset-0 flex items-center justify-center">
-          <div class="size-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center">
-            <span class="material-symbols-outlined text-white text-lg" data-icon="play_arrow" data-weight="fill">play_arrow</span>
-          </div>
-        </div>
-      </div>
-      <div class="flex-1 py-1 text-left">
-        <span class="inline-block px-2 py-0.5 rounded-full bg-lavender-pastel/20 text-lavender-pastel text-[9px] font-bold tracking-widest uppercase mb-1.5 border border-lavender-pastel/20" id="dash-workout-level">--</span>
-        <h4 class="text-base font-bold leading-tight mb-0.5" id="dash-workout-name">--</h4>
-        <p class="text-xs opacity-60 flex items-center gap-1">
-          <span class="material-symbols-outlined text-[14px]" data-icon="schedule">schedule</span> <span id="dash-workout-dur">--</span>
-        </p>
-      </div>
-    </button>
-  </section>
-
-  <!-- Old elements removed but still in DOM to prevent JS errors -->
-  <div id="insight-chip" style="display:none;"></div>
-  <div id="kpi-strip" style="display:none;"></div>
-  <canvas id="db-week" style="display:none;"></canvas>
-  <canvas id="db-mood" style="display:none;"></canvas>
-  <div id="cycle-snap" style="display:none;"></div>
+    <div class="card" id="cycle-snap-card">
+      <div class="card-title">Cycle snapshot</div>
+      <div id="cycle-snap"></div>
+    </div>
+  </div>
 </section>
-
 
 <!-- LOG TODAY -->
 <section class="page" id="page-log">
@@ -230,10 +99,16 @@
       <button class="btn" data-action="log-sleep">Save sleep</button>
     </div>
 
-    <div class="card">
-      <div class="card-title"><span class="ct-dot" style="background:var(--blue)"></span>Water</div>
-      <div class="water-dots" id="water-dots"></div>
-      <div class="water-label" id="water-lbl">0 / 8 glasses</div>
+    <div class="card fluid-wrapper" style="padding-bottom: 2rem;">
+      <div class="fluid-container" id="water-fluid">
+        <div class="wave"></div>
+        <div class="wave-fill"></div>
+      </div>
+      <div style="position: relative; z-index: 10;">
+        <div class="card-title"><span class="ct-dot" style="background:var(--blue)"></span>Water</div>
+        <div class="water-dots" id="water-dots"></div>
+        <div class="water-label glow" id="water-lbl">0 / 8 glasses</div>
+      </div>
     </div>
 
     <div class="card">
@@ -381,44 +256,10 @@
   </div>
 </section>
 
-<!-- AI ASSISTANT -->
-<section class="page" id="page-assistant">
-  <div class="ph"><div><h1 class="pt">AI Assistant</h1><p class="ps">Ask anything about your health, diet or cycle</p></div></div>
-  <div class="ai-wrap">
-    <div class="ai-sugs" id="ai-sugs"></div>
-    <div class="chat-win" id="chat-win"></div>
-    <div class="chat-inp-row">
-      <input type="text" id="chat-inp" placeholder="Ask me anything…">
-      <button class="btn-send" data-action="send-chat">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-      </button>
-    </div>
-  </div>
-</section>
+
 
 </main>
 </div>
-<nav class="fixed bottom-0 left-0 right-0 z-50 backdrop-blur-2xl bg-white/60 dark:bg-obsidian/80 border-t border-black/5 dark:border-white/5 pb-safe">
-<div class="flex justify-around items-center h-16 max-w-md mx-auto px-4 nav" id="nav">
-<button class="nav-a active flex flex-col items-center gap-1 text-primary-pastel" data-p="dashboard">
-<span class="material-symbols-outlined text-2xl" data-icon="grid_view" data-weight="fill">grid_view</span>
-<span class="text-[9px] font-bold uppercase tracking-tighter">Today</span>
-</button>
-<button class="nav-a flex flex-col items-center gap-1 opacity-40 hover:opacity-100 transition-opacity" data-p="workout">
-<span class="material-symbols-outlined text-2xl" data-icon="fitness_center">fitness_center</span>
-<span class="text-[9px] font-bold uppercase tracking-tighter">Plan</span>
-</button>
-<button class="nav-a flex flex-col items-center gap-1 opacity-40 hover:opacity-100 transition-opacity" data-p="trends">
-<span class="material-symbols-outlined text-2xl" data-icon="monitoring">monitoring</span>
-<span class="text-[9px] font-bold uppercase tracking-tighter">Insights</span>
-</button>
-<button class="nav-a flex flex-col items-center gap-1 opacity-40 hover:opacity-100 transition-opacity" data-p="cycle">
-<span class="material-symbols-outlined text-2xl" data-icon="settings">settings</span>
-<span class="text-[9px] font-bold uppercase tracking-tighter">Profile</span>
-</button>
-</div>
-</nav>
-
 <div class="toast" id="toast"></div>
 <script src="js/data.js"></script>
 <script src="js/app.js"></script>
