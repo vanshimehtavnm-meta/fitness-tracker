@@ -124,62 +124,67 @@ function logNotes() {
 let dbCharts={};
 function destroyChart(id) { if(dbCharts[id]){dbCharts[id].destroy();delete dbCharts[id];} }
 
+
 function buildDash() {
-  const days7=daysBack(7);
-  const log=getLog(todayStr());
-  const sleeps=daysBack(14).map(d=>S.logs[d]?.sleep??null);
-  const waters=daysBack(14).map(d=>S.logs[d]?.water??null);
-  const exs=daysBack(14).map(d=>S.logs[d]?.exercise??null);
-  const totCals=(log.meals||[]).reduce((a,m)=>a+m.cals,0);
-  const moodMap={1:'Very low',3:'Low',5:'Neutral',7:'Good',9:'Great'};
-  const wts=daysBack(14).map(d=>S.logs[d]?.weight).filter(Boolean);
-  const kpis=[
-    {l:'Avg sleep',v:avg(sleeps)?avg(sleeps)+'h':'–',s:'14-day avg',c:'var(--green)'},
-    {l:'Avg water',v:avg(waters)?avg(waters)+' gl':'–',s:'glasses/day',c:'var(--blue)'},
-    {l:'Avg exercise',v:avg(exs)?avg(exs)+'m':'–',s:'min/day',c:'#9B72CF'},
-    {l:"Today's mood",v:log.mood?moodMap[log.mood]:'–',s:'logged today',c:'var(--pink)'},
-    {l:'Calories today',v:totCals>0?totCals+' kcal':'–',s:'goal: '+S.calGoal,c:'var(--amber)'},
-    {l:'Weight',v:wts.slice(-1)[0]?wts.slice(-1)[0]+'kg':'–',s:'latest entry',c:'var(--ink2)'},
-  ];
-  document.getElementById('kpi-strip').innerHTML=kpis.map(k=>`
-    <div class="kpi"><div class="kpi-l">${k.l}</div><div class="kpi-v" style="color:${k.c}">${k.v}</div><div class="kpi-s">${k.s}</div></div>`).join('');
+  const log = getLog(todayStr());
+  const stepsGoal = 10000;
+  const activeGoal = 60;
 
-  const labels=days7.map(shortLabel);
-  destroyChart('db-week');
-  dbCharts['db-week']=new Chart(document.getElementById('db-week'),{
-    type:'bar',
-    data:{labels,datasets:[
-      {label:'Sleep (h)',data:days7.map(d=>S.logs[d]?.sleep??null),backgroundColor:'#A8D9BB',borderRadius:4,yAxisID:'y'},
-      {label:'Water (gl)',data:days7.map(d=>S.logs[d]?.water??null),backgroundColor:'#B5D4F4',borderRadius:4,yAxisID:'y'},
-      {label:'Exercise (/6 min)',data:days7.map(d=>S.logs[d]?.exercise?+(S.logs[d].exercise/6).toFixed(1):null),backgroundColor:'#C4BFF0',borderRadius:4,yAxisID:'y'},
-    ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11,family:"'DM Sans'"},color:'#A89A88',boxWidth:10,padding:12}}},scales:{x:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:11},color:'#A89A88'}},y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:11},color:'#A89A88'},min:0,max:12}}}
-  });
+  // Fake steps for demo based on exercise, or just random
+  const steps = (log.exercise || 0) * 110 + 2000;
+  const active = log.exercise || 0;
 
-  destroyChart('db-mood');
-  dbCharts['db-mood']=new Chart(document.getElementById('db-mood'),{
-    type:'line',
-    data:{labels,datasets:[{data:days7.map(d=>S.logs[d]?.mood??null),borderColor:'var(--pink)',backgroundColor:'rgba(184,66,95,.1)',fill:true,tension:0.4,pointRadius:4,pointBackgroundColor:'var(--pink)',spanGaps:true}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:11},color:'#A89A88'}},y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:11},color:'#A89A88'},min:0,max:10}}}
-  });
+  const stepPct = Math.min(100, Math.round((steps / stepsGoal) * 100));
+  const activePct = Math.min(100, Math.round((active / activeGoal) * 100));
+  const totalPct = Math.round((stepPct + activePct) / 2);
 
-  // Cycle snap
-  const ci=getCycleInfo();
-  const snapEl=document.getElementById('cycle-snap');
-  const PMETA={
-    menstrual:{label:'Menstrual phase',bg:'#FAEEF1',c:'#8B2242',note:'Energy is low. Gentle movement and rest work best.'},
-    follicular:{label:'Follicular phase',bg:'#E6F3EE',c:'var(--green)',note:'Energy rising. Great time to push harder.'},
-    ovulation:{label:'Ovulation phase',bg:'var(--amber-l)',c:'var(--amber)',note:'Peak energy and strength. Go for it!'},
-    luteal:{label:'Luteal phase',bg:'var(--blue-l)',c:'var(--blue)',note:'Energy dipping. Moderate activity is ideal.'},
-  };
-  if(ci){
-    const m=PMETA[ci.phase];
-    snapEl.innerHTML=`<div style="background:${m.bg};border-radius:var(--r-sm);padding:.8rem 1rem;margin-bottom:8px"><div style="font-family:'Lora',serif;font-size:18px;color:${m.c};letter-spacing:-.02em;margin-bottom:2px">${m.label}</div><div style="font-size:12px;color:${m.c}CC">Day ${ci.day} of cycle</div></div><div style="font-size:13px;color:var(--ink2);line-height:1.6;margin-bottom:10px">${m.note}</div><button class="btn" style="font-size:12px;padding:6px 14px" data-action="nav" data-target="workout">See today's workout →</button>`;
-  } else {
-    snapEl.innerHTML=`<div style="font-size:13px;color:var(--ink3);padding:8px 0">Set up your cycle in the Cycle tab to see phase insights here.</div><button class="btn" style="font-size:12px;padding:6px 14px;margin-top:6px" data-action="nav" data-target="cycle">Set up cycle →</button>`;
+  const ringSteps = document.getElementById('ring-steps');
+  if (ringSteps) {
+      const offset = 628 - (628 * stepPct / 100);
+      ringSteps.style.strokeDashoffset = offset;
   }
-  loadInsight();
+
+  const ringActive = document.getElementById('ring-active');
+  if (ringActive) {
+      const offset = 477 - (477 * activePct / 100);
+      ringActive.style.strokeDashoffset = offset;
+  }
+
+  if (document.getElementById('dash-goal-pct')) document.getElementById('dash-goal-pct').textContent = totalPct + '%';
+  if (document.getElementById('dash-steps-val')) document.getElementById('dash-steps-val').textContent = steps.toLocaleString();
+  if (document.getElementById('dash-active-val')) document.getElementById('dash-active-val').textContent = active + 'm';
+
+  // Hydration
+  const water = log.water || 0;
+  if (document.getElementById('dash-water-val')) document.getElementById('dash-water-val').innerHTML = `${water}<span class="text-xs opacity-60 font-normal ml-1">glasses</span>`;
+  const waterWave = document.getElementById('dash-water-wave');
+  if (waterWave) {
+      const waterPct = Math.min(100, Math.round((water / 8) * 100));
+      // Base height 10%, max 100%
+      const h = Math.max(10, waterPct);
+      waterWave.style.height = h + '%';
+  }
+
+  // Cycle
+  const ci = getCycleInfo();
+  if (ci) {
+      if (document.getElementById('dash-cycle-day')) document.getElementById('dash-cycle-day').textContent = 'Day ' + ci.day;
+      if (document.getElementById('dash-cycle-phase')) document.getElementById('dash-cycle-phase').textContent = ci.phase.charAt(0).toUpperCase() + ci.phase.slice(1) + ' Phase';
+  } else {
+      if (document.getElementById('dash-cycle-day')) document.getElementById('dash-cycle-day').textContent = '--';
+      if (document.getElementById('dash-cycle-phase')) document.getElementById('dash-cycle-phase').textContent = 'Not Set';
+  }
+
+  // Next Workout (just grab the first one for the phase or a default)
+  const phase = ci?.phase || 'follicular';
+  const w = WORKOUTS[phase] ? WORKOUTS[phase][0] : null;
+  if (w) {
+    if (document.getElementById('dash-workout-name')) document.getElementById('dash-workout-name').textContent = w.n;
+    if (document.getElementById('dash-workout-dur')) document.getElementById('dash-workout-dur').textContent = w.d;
+    if (document.getElementById('dash-workout-level')) document.getElementById('dash-workout-level').textContent = ILVL[w.i];
+  }
 }
+
 
 // ── Daily AI insight ──────────────────────────────────────────
 async function loadInsight() {
@@ -693,6 +698,12 @@ document.addEventListener('click', (e) => {
             const opt = QUICK_EX[el.dataset.idx];
             document.getElementById('ex-type').value=opt.t;
             document.getElementById('ex-min').value=opt.d;
+        }
+        if (action === 'dash-log-water') {
+            e.stopPropagation();
+            const log=getLog(todayStr());
+            log.water=(log.water||0)+1;
+            save(); renderWater(); buildDash(); toast('Water updated');
         }
         if (action === 'log-water') {
             const log=getLog(todayStr());
